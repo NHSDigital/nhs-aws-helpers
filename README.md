@@ -1,7 +1,6 @@
 # NHS AWS Helpers
 
-this context logging library is designed to make adding good quality *structured* logs EASY and make source code easy to read, removing 'boilerplate' logging from the code and allowing the eye to focus on what the code does.
-NOTE: when using context logging, logs are emitted when exiting the context (when the function call ends or wrapped context otherwise exits)
+some useful boto3 utilities
 
 # quick start
 

@@ -35,7 +35,6 @@ __pycache__
 .coverage-out/
 .tox
 
-
 # certs/keys/pems
 *.crt
 *.csr

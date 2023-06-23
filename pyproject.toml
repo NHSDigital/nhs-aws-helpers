@@ -62,7 +62,8 @@ exclude = [
     "__pycache__",
     ".venv",
     "build",
-    "dist"
+    "dist",
+    ".tox"
 ]
 #extend-ignore = ["E203"]
 #per-file-ignores = [
@@ -108,7 +109,7 @@ output = "reports/coverage.xml"
 asyncio_mode = "auto"
 python_classes = "NoTestClasses"
 python_files = "*_tests.py test_*.py"
-norecursedirs = ".git .venv .eggs build dist"
+norecursedirs = ".git .venv .eggs build dist .tox"
 
 [tool.mypy]
 python_version = "3.8"

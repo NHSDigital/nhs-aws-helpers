@@ -33,6 +33,7 @@ __pycache__
 .python-version
 .coverage
 .coverage-out/
+.tox
 
 
 # certs/keys/pems

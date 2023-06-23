@@ -130,10 +130,10 @@ def s3_split_path(s3uri: str) -> Tuple[str, str, str]:
     return scheme, bucket, key
 
 
-_pre_configure: Optional[Callable[[str, str, Optional[Config]], Config]] = None
+_pre_configure: Optional[Callable[[str, str, Optional[Config]], Optional[Config]]] = None
 
 
-def register_pre_configure(pre_configure: Callable[[str, str, Optional[Config]], Config]):
+def register_pre_configure(pre_configure: Callable[[str, str, Optional[Config]], Optional[Config]]):
     global _pre_configure
     _pre_configure = pre_configure
 
@@ -147,7 +147,8 @@ def register_post_create(post_create: Callable[[str, str, object], Any]):
 
 
 def register_pre_post(
-    pre_configure: Callable[[str, str, Optional[Config]], Config], post_create: Callable[[str, str, object], Any]
+    pre_configure: Callable[[str, str, Optional[Config]], Optional[Config]],
+    post_create: Callable[[str, str, object], Any],
 ):
     register_pre_configure(pre_configure)
     register_post_create(post_create)

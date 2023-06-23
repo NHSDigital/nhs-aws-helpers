@@ -12,6 +12,7 @@ from http.client import HTTPConnection, HTTPResponse
 from typing import (
     IO,
     Any,
+    AsyncIterator,
     Callable,
     Dict,
     Generator,
@@ -1113,7 +1114,7 @@ def assumed_role_session(
     return Session(botocore_session=session)
 
 
-async def async_stream_from_s3(s3_get_resp: GetObjectOutputTypeDef, bytes_per_chunk: int):
+async def async_stream_from_s3(s3_get_resp: GetObjectOutputTypeDef, bytes_per_chunk: int) -> AsyncIterator[bytes]:
     body = s3_get_resp["Body"]
     chunk = await run_in_executor(body.read, bytes_per_chunk)
     while chunk:

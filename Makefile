@@ -70,7 +70,7 @@ lint: flake8 mypy shellcheck
 
 
 up:
-	poetry run docker compose up -d --remove-orphans
+	docker compose up -d --remove-orphans
 	scripts/wait-for-container.sh localstack
 
 

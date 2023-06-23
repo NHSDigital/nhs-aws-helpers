@@ -1,2 +1,4 @@
 
 token: \$\{\{ secrets.GITHUB_TOKEN \}\}
+"token": response.get\("SessionToken"\)
+token=credentials\["token"\]

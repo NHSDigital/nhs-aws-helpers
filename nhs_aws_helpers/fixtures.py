@@ -8,7 +8,13 @@ from mypy_boto3_s3.service_resource import Bucket
 from mypy_boto3_s3.type_defs import CreateBucketConfigurationTypeDef
 from mypy_boto3_sqs.service_resource import Queue
 
-from nhs_aws_helpers import events_client, s3_resource, sqs_resource, dynamodb, ddb_table
+from nhs_aws_helpers import (
+    ddb_table,
+    dynamodb,
+    events_client,
+    s3_resource,
+    sqs_resource,
+)
 
 
 @pytest.fixture(scope="session")

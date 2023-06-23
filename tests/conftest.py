@@ -1,5 +1,6 @@
-from nhs_aws_helpers.fixtures import *  # noqa: F403, F401
 import pytest  # type: ignore[import]
+
+from nhs_aws_helpers.fixtures import *  # noqa: F403, F401
 from tests.utils import temp_env_vars
 
 

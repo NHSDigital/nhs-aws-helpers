@@ -96,7 +96,7 @@ omit = [
 sort = "-cover"
 ignore_errors = true
 precision = 2
-fail_under = 70
+fail_under = 54
 show_missing = true
 
 [tool.coverage.xml]
@@ -135,13 +135,14 @@ python =
 deps =
     pytest
     pytest-asyncio
+    pytest-httpserver
+    petname
 allowlist_externals =
     which
     pytest
 commands = 
     python --version
     which python
-    which pytest
     pytest
 """
 

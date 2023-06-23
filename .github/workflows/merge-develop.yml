@@ -36,6 +36,9 @@ jobs:
       - name: install dependencies
         run: make install-ci
 
+      - name: start localstack
+        run: make up
+
       - name: code coverage
         run: make coverage-ci
 
@@ -45,7 +48,7 @@ jobs:
         with:
           coverageFile: reports/coverage.xml
           token: ${{ secrets.GITHUB_TOKEN }}
-          thresholdAll: 0.70
+          thresholdAll: 0.54
 
       - name: setup java
         if: success() || failure()

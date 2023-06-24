@@ -8,8 +8,8 @@ some useful boto3 utilities
 contributors see [contributing](CONTRIBUTING.md)
 
 ### installing
-install using git + https
+install the fully portable whl in releases 
 see [releases](https://github.com/NHSDigital/nhs-aws-helpers/releases) for the latest release
 ```shell
-pip install git+https://github.com/NHSDigital/nhs-aws-helpers.git#refs/tags/v0.0.10
+pip install https://github.com/NHSDigital/nhs-aws-helpers/releases/download/v0.0.12/nhs_aws_helpers-0.0.12-py3-none-any.whl
 ```

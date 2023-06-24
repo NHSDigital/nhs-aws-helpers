@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nhs_aws_helpers"
-version = "0.0.0"
+version = "0.0.2"
 description = ""
 authors = ["spinecore"]
 license = "MIT"
@@ -12,7 +12,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 # core dependencies
-python = ">=3.8.1"
+python = ">=3.8.1,<4.0"
 
 
 boto3 = "^1.26.159"

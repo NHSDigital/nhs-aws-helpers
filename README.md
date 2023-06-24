@@ -9,7 +9,7 @@ contributors see [contributing](CONTRIBUTING.md)
 
 ### installing
 install using git + https
-see [releases](https://github.com/NHSDigital/nhs-aws-helpers-logging/releases) for the latest release
+see [releases](https://github.com/NHSDigital/nhs-aws-helpers/releases) for the latest release
 ```shell
-pip install git+https://github.com/NHSDigital/nhs-aws-helpers.git#refs/tags/v0.0.4
+pip install git+https://github.com/NHSDigital/nhs-aws-helpers.git#refs/tags/v0.0.10
 ```

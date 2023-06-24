@@ -1,4 +1,4 @@
-name: pull-request
+name: merge-develop
 on:
   push:
     branches:
@@ -114,6 +114,9 @@ jobs:
           version="v$(poetry version patch | rev | cut -d' ' -f1 | rev)"
           echo "RELEASE_VERSION=$version" >> $GITHUB_ENV
           git tag $version
+          poetry build
+          echo "WHEEL=$(find dist -type f -name '*.whl' | xargs basename)" >> $GITHUB_ENV
+          echo "SDIST=$(find dist -type f -name '*.tar.gz' | xargs basename)" >> $GITHUB_ENV
 
       - name: create release
         id: create_release
@@ -124,3 +127,23 @@ jobs:
         with:
           tag_name: ${{ env.RELEASE_VERSION }}
           release_name: ${{ env.RELEASE_VERSION }}
+
+      - name: upload wheel
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/${{ env.WHEEL }}
+          asset_name: ${{ env.WHEEL }}
+          asset_content_type: application/zip
+
+      - name: upload sdist
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/${{ env.SDIST }}
+          asset_name: ${{ env.SDIST }}
+          asset_content_type: application/gzip

@@ -54,6 +54,10 @@ jobs:
       - name: tox
         run: tox
 
+      - name: stop docker containers
+        if: success() || failure()
+        run: make down
+
 
   coverage:
     runs-on: ubuntu-latest
@@ -170,6 +174,10 @@ jobs:
         with:
           check_name: junit reports
           report_paths: reports/junit/*.xml
+
+      - name: stop docker containers
+        if: success() || failure()
+        run: make down
 
   lint:
     runs-on: ubuntu-latest

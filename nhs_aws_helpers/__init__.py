@@ -78,6 +78,8 @@ from mypy_boto3_ssm.client import SSMClient
 from nhs_aws_helpers.common import run_in_executor
 from nhs_aws_helpers.s3_object_writer import S3ObjectWriter
 
+__version__ = "0.0.0"
+
 s3re = re.compile(r"^(s3[an]?)://([^/]+)/(.+)$", re.IGNORECASE)
 
 

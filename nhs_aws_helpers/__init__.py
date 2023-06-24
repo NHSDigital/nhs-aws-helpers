@@ -131,28 +131,32 @@ def s3_split_path(s3uri: str) -> Tuple[str, str, str]:
     return scheme, bucket, key
 
 
+_default_configs: Dict[str, Config] = {}
+
 _pre_configure: Optional[Callable[[str, str, Optional[Config]], Optional[Config]]] = None
 
 
-def register_pre_configure(pre_configure: Callable[[str, str, Optional[Config]], Optional[Config]]):
-    global _pre_configure
-    _pre_configure = pre_configure
+def register_config_default(service: str, config: Config):
+    """
+        register default config, that will be used or merged for a given aws service
+    Args:
+        service: single service e.g s3, dynamodb .. or * for all services
+        config: boto config
+    """
+    _default_configs[service] = config
 
 
-_post_create: Optional[Callable[[str, str, object], Any]] = None
+_post_create_client: Optional[Callable[[str, str, object], Any]] = None
 
 
-def register_post_create(post_create: Callable[[str, str, object], Any]):
-    global _post_create
-    _post_create = post_create
-
-
-def register_pre_post(
-    pre_configure: Callable[[str, str, Optional[Config]], Optional[Config]],
-    post_create: Callable[[str, str, object], Any],
-):
-    register_pre_configure(pre_configure)
-    register_post_create(post_create)
+def post_create_client(post_create: Callable[[str, str, object], Any]):
+    """
+        hook to allow configuration of a created service after created
+    Args:
+        post_create: callable, takes args  aws service, resource/client, created client
+    """
+    global _post_create_client
+    _post_create_client = post_create
 
 
 def _aws(
@@ -174,8 +178,9 @@ def _aws(
 
     cls = getattr(session_or_module, boto_method)
 
-    if _pre_configure:
-        config = _pre_configure(aws_module, boto_method, config)
+    default_config = _default_configs.get(aws_module, _default_configs.get("*"))
+    if default_config:
+        config = config.merge(default_config) if config else default_config
 
     aws_endpoint_url = os.environ.get("AWS_ENDPOINT_URL")
     aws_region = os.environ.get("AWS_REGION", "eu-west-2")
@@ -192,8 +197,8 @@ def _aws(
         )
     created = cls(aws_module, **kwargs)
 
-    if _post_create:
-        _post_create(aws_module, boto_method, created)
+    if _post_create_client:
+        _post_create_client(aws_module, boto_method, created)
 
     return created
 
@@ -297,6 +302,9 @@ class CustomBackoff(BaseRetryBackoff):
             self._max_backoff,
         )
 
+        if self._on_backoff:
+            self._on_backoff(backoff, context)
+
         return backoff
 
 
@@ -344,8 +352,10 @@ def secret_binary_value(name: str, session: Optional[Session] = None, config: Op
     return secrets_client(session=session, config=config).get_secret_value(SecretId=name)["SecretBinary"]
 
 
-def ssm_parameter(name: str, decrypt=False) -> Union[str, List[str]]:
-    ssm = ssm_client()
+def ssm_parameter(
+    name: str, decrypt=False, session: Optional[Session] = None, config: Optional[Config] = None
+) -> Union[str, List[str]]:
+    ssm = ssm_client(session=session, config=config)
     value = cast(Union[str, List[str]], ssm.get_parameter(Name=name, WithDecryption=decrypt)["Parameter"]["Value"])
     return value
 
@@ -594,6 +604,7 @@ def s3_list_delete_markers(
     predicate: Optional[Callable[[str], bool]] = None,
     session: Optional[Session] = None,
     config: Optional[Config] = None,
+    client: Optional[S3Client] = None,
 ) -> Generator[DeleteMarkerEntryTypeDef, None, None]:
     """list contents of S3 bucket based on filter criteria and versioning flag
 
@@ -604,11 +615,11 @@ def s3_list_delete_markers(
         predicate (Callable[[str], bool]): predicate function to filter results on
         session (Session): optional existing session r
         config (Config): optional botocore config
-
+        client (S3Client): optional pre created client
     Returns:
         Generator[object, None, None]: resulting objects or versions
     """
-    client = s3_client(session=session, config=config)
+    client = client or s3_client(session=session, config=config)
     paginator = client.get_paginator("list_object_versions").paginate(
         Bucket=bucket, Prefix=prefix, Delimiter="" if recursive else "/"
     )

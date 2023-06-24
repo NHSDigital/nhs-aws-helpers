@@ -82,6 +82,10 @@ jobs:
           check_name: junit reports
           report_paths: reports/junit/*.xml
 
+      - name: stop docker containers
+        if: success() || failure()
+        run: make down
+
 
   publish:
     runs-on: ubuntu-latest

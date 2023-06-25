@@ -57,14 +57,14 @@ jobs:
           thresholdAll: 0.54
 
       - name: setup java
-        if: github.actor!= 'dependabot[bot]' && (success() || failure())
+        if: github.actor != 'dependabot[bot]' && (success() || failure())
         uses: actions/setup-java@v3
         with:
           distribution: "corretto"
           java-version: "17"
 
       - name: provision sonar-scanner
-        if: github.actor!= 'dependabot[bot]' && (success() || failure())
+        if: github.actor != 'dependabot[bot]' && (success() || failure())
         run: |
           export SONAR_VERSION="4.7.0.2747"
           wget -q "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_VERSION}.zip" -O sonar-scanner.zip
@@ -73,7 +73,7 @@ jobs:
           scripts/sonar_tests.py
 
       - name: run sonar scan
-        if: github.actor!= 'dependabot[bot]' && (success() || failure())
+        if: github.actor != 'dependabot[bot]' && (success() || failure())
         run: |
           PATH="$PWD/sonar-scanner/bin:$PATH"
           sonar-scanner
@@ -95,7 +95,7 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
-    if: github.repository == 'NHSDigital/nhs-aws-helpers' && github.actor!= 'dependabot[bot]' && !contains(github.event.head_commit.message, 'tag release version:')
+    if: github.repository == 'NHSDigital/nhs-aws-helpers' && github.actor != 'dependabot[bot]' && !contains(github.event.head_commit.message, 'tag release version:')
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -139,6 +139,13 @@ jobs:
         with:
           tag_name: ${{ env.RELEASE_VERSION }}
           release_name: ${{ env.RELEASE_VERSION }}
+
+      - name: poetry config
+        run: |
+          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+
+      - name: poetry publish
+        run: poetry publish
 
       - name: upload wheel
         uses: actions/upload-release-asset@v1

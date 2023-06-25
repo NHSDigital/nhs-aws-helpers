@@ -97,8 +97,14 @@ jobs:
         with:
           python-version: "3.8"
 
-      - name: install poetry
-        run: make install-poetry
+      - name: setup poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: 1.5.1
+
+      - name: add poetry plugins
+        run: |
+          poetry self add "poetry-dynamic-versioning[plugin]"
 
       - name: cache virtualenv
         uses: actions/cache@v3
@@ -131,14 +137,14 @@ jobs:
           thresholdAll: 0.54
 
       - name: setup java
-        if: success() || failure()
+        if: github.actor!= 'dependabot[bot]' && (success() || failure())
         uses: actions/setup-java@v3
         with:
           distribution: "corretto"
           java-version: "17"
 
       - name: provision sonar-scanner
-        if: success() || failure()
+        if: github.actor!= 'dependabot[bot]' && (success() || failure())
         run: |
           export SONAR_VERSION="4.7.0.2747"
           wget -q "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_VERSION}.zip" -O sonar-scanner.zip
@@ -147,7 +153,7 @@ jobs:
           scripts/sonar_tests.py
 
       # - name: run sonar scan
-      #   if: success() || failure()
+      #   if: github.actor!= 'dependabot[bot]' && (success() || failure())
       #   run: |
       #     PATH="$PWD/sonar-scanner/bin:$PATH"
       #     if [[ "${{ github.event_name }}" == "pull_request" ]]; then
@@ -162,7 +168,7 @@ jobs:
 
 
       - name: archive reports
-        if: success() || failure()
+        if: github.actor!= 'dependabot[bot]' && (success() || failure())
         uses: actions/upload-artifact@v3
         with:
           name: reports
@@ -209,8 +215,14 @@ jobs:
         with:
           python-version: "3.8"
 
-      - name: install poetry
-        run: make install-poetry
+      - name: setup poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: 1.5.1
+
+      - name: add poetry plugins
+        run: |
+          poetry self add "poetry-dynamic-versioning[plugin]"
 
       - name: cache virtualenv
         uses: actions/cache@v3

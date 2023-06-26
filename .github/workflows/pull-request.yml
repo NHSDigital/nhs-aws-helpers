@@ -152,20 +152,19 @@ jobs:
           mv ./sonar-scanner-${SONAR_VERSION} ./sonar-scanner
           scripts/sonar_tests.py
 
-      # - name: run sonar scan
-      #   if: github.actor != 'dependabot[bot]' && (success() || failure())
-      #   run: |
-      #     PATH="$PWD/sonar-scanner/bin:$PATH"
-      #     if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-      #       git checkout "${GITHUB_HEAD_REF}"
-      #       sonar-scanner -Dsonar.pullrequest.branch="{{ github.event.pull_request.head.sha }}" -Dsonar.pullrequest.base="{{ github.event.pull_request.base.sha }}" -Dsonar.pullrequest.key="${{ github.event.number }}"
-      #     else
-      #       sonar-scanner
-      #     fi
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
+      - name: run sonar scan
+        if: github.actor != 'dependabot[bot]' && (success() || failure())
+        run: |
+         PATH="$PWD/sonar-scanner/bin:$PATH"
+         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+           git checkout "${GITHUB_HEAD_REF}"
+           sonar-scanner -Dsonar.pullrequest.branch="{{ github.event.pull_request.head.sha }}" -Dsonar.pullrequest.base="{{ github.event.pull_request.base.sha }}" -Dsonar.pullrequest.key="${{ github.event.number }}"
+         else
+           sonar-scanner
+         fi
+        env:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: archive reports
         if: github.actor != 'dependabot[bot]' && (success() || failure())

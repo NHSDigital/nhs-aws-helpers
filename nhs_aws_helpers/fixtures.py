@@ -1,5 +1,5 @@
 import json
-from typing import Generator, Tuple
+from typing import Any, Dict, Generator, Tuple
 
 import petname  # type: ignore[import]
 import pytest
@@ -99,7 +99,7 @@ def temp_fifo_queue() -> Generator[Queue, None, None]:
     queue.delete()
 
 
-def clone_schema(table):
+def clone_schema(table, on_demand_billing_mode: bool = True, provisioned_capacity: int = 500):
     key_schema = table.key_schema
 
     attributes = table.attribute_definitions
@@ -116,20 +116,35 @@ def clone_schema(table):
     clone = {
         "KeySchema": key_schema,
         "AttributeDefinitions": attributes,
-        "ProvisionedThroughput": {"ReadCapacityUnits": 1000, "WriteCapacityUnits": 1000},
     }
 
-    if indexes:
+    billing: Dict[str, Any] = (
+        {
+            "BillingMode": "PAY_PER_REQUEST",
+        }
+        if on_demand_billing_mode
+        else {
+            "ProvisionedThroughput": {
+                "ReadCapacityUnits": provisioned_capacity,
+                "WriteCapacityUnits": provisioned_capacity,
+            }
+        }
+    )
 
-        for index in indexes:
-            index["ProvisionedThroughput"]["ReadCapacityUnits"] = 1000
-            index["ProvisionedThroughput"]["WriteCapacityUnits"] = 1000
+    clone.update(billing)
+
+    if indexes:
+        if not on_demand_billing_mode:
+            for index in indexes:
+                index.update(billing)
         clone["GlobalSecondaryIndexes"] = indexes
 
     return clone
 
 
-def temp_dynamodb_table(source_table_name: str) -> Generator[Table, None, None]:
+def temp_dynamodb_table(
+    source_table_name: str, on_demand_billing_mode: bool = True, provisioned_capacity: int = 500
+) -> Generator[Table, None, None]:
     """
     Create a table that copies the schema of <source_table> but uses a random name, can be used throughout
     a test and is deleted at the end.
@@ -140,7 +155,7 @@ def temp_dynamodb_table(source_table_name: str) -> Generator[Table, None, None]:
 
     source_table = ddb_table(source_table_name)
 
-    cloned = clone_schema(source_table)
+    cloned = clone_schema(source_table, on_demand_billing_mode, provisioned_capacity)
 
     table = ddb.create_table(TableName=table_name, **cloned)
 

@@ -99,7 +99,7 @@ def temp_fifo_queue() -> Generator[Queue, None, None]:
     queue.delete()
 
 
-def clone_schema(table, on_demand_billing_mode: bool = True, provisioned_capacity: int = 500):
+def clone_schema(table, on_demand_billing_mode: bool = True, provisioned_capacity: int = 250):
     key_schema = table.key_schema
 
     attributes = table.attribute_definitions
@@ -112,12 +112,14 @@ def clone_schema(table, on_demand_billing_mode: bool = True, provisioned_capacit
             del index["IndexSizeBytes"]
             del index["ItemCount"]
             del index["IndexArn"]
+            del index["ProvisionedThroughput"]
 
     clone = {
         "KeySchema": key_schema,
         "AttributeDefinitions": attributes,
     }
-
+    if on_demand_billing_mode:
+        provisioned_capacity = 0
     billing: Dict[str, Any] = (
         {
             "BillingMode": "PAY_PER_REQUEST",

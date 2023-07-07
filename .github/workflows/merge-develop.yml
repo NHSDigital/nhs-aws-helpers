@@ -54,7 +54,7 @@ jobs:
         with:
           coverageFile: reports/coverage.xml
           token: ${{ secrets.GITHUB_TOKEN }}
-          thresholdAll: 0.54
+          thresholdAll: 0.65
 
       - name: setup java
         if: github.actor != 'dependabot[bot]' && (success() || failure())

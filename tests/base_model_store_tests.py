@@ -318,7 +318,7 @@ async def test_store_put_get_model(store: MyModelStore):
     actual = await store.get_model(expected.model_key(), MyDerivedModel)
 
     assert actual
-    assert type(actual) == MyDerivedModel
+    assert isinstance(actual, MyDerivedModel)
 
 
 async def test_store_put_update_get_model(store: MyModelStore):
@@ -330,7 +330,7 @@ async def test_store_put_update_get_model(store: MyModelStore):
     actual = await store.get_model(expected.model_key(), MyDerivedModel)
 
     assert actual
-    assert type(actual) == MyDerivedModel
+    assert isinstance(actual, MyDerivedModel)
 
     await store.update_item(
         expected.model_key(), UpdateExpression="SET optional_thing = :val", ExpressionAttributeValues={":val": "BOB"}

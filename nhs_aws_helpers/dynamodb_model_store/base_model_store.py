@@ -27,11 +27,11 @@ from botocore.exceptions import ClientError
 from mypy_boto3_dynamodb import DynamoDBClient
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from mypy_boto3_dynamodb.type_defs import (
-    BatchGetItemOutputTypeDef,
-    QueryOutputTypeDef,
+    BatchGetItemOutputServiceResourceTypeDef,
+    QueryOutputTableTypeDef,
     TransactGetItemTypeDef,
-    UpdateItemOutputTypeDef,
-    WriteRequestOutputTypeDef,
+    UpdateItemOutputTableTypeDef,
+    WriteRequestTypeDef,
 )
 
 from nhs_aws_helpers import dynamodb, dynamodb_retry_backoff
@@ -460,7 +460,7 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
             yield PagedItems(items, last_evaluated_key)
 
     @dynamodb_retry_backoff()
-    async def query(self, **kwargs) -> QueryOutputTypeDef:
+    async def query(self, **kwargs) -> QueryOutputTableTypeDef:
         return await run_in_executor(self.table.query, **kwargs)
 
     async def query_items(self, **kwargs) -> PagedItems[dict]:
@@ -502,7 +502,7 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
     @dynamodb_retry_backoff()
     async def update_item_with_retry_info(
         self, key: TModelKey, **kwargs
-    ) -> Tuple[UpdateItemOutputTypeDef, float, str, int]:
+    ) -> Tuple[UpdateItemOutputTableTypeDef, float, str, int]:
         kwargs["Key"] = cast(Dict[str, str], key)
 
         started = time()
@@ -514,7 +514,7 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
 
         return response, duration, aws_request_id, aws_retries
 
-    async def update_item(self, key: TModelKey, **kwargs) -> UpdateItemOutputTypeDef:
+    async def update_item(self, key: TModelKey, **kwargs) -> UpdateItemOutputTableTypeDef:
 
         response, _, _, _ = await self.update_item_with_retry_info(key, **kwargs)
         return response
@@ -576,7 +576,9 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
             result.extend(models)
         return result
 
-    def _get_batch_results(self, response: BatchGetItemOutputTypeDef) -> Tuple[List[Dict[str, Any]], List[TModelKey]]:
+    def _get_batch_results(
+        self, response: BatchGetItemOutputServiceResourceTypeDef
+    ) -> Tuple[List[Dict[str, Any]], List[TModelKey]]:
         assert response["ResponseMetadata"]["HTTPStatusCode"] == 200
         results: List[Dict[str, Any]] = response.get("Responses", {}).get(self._table_name) or []
         unprocessed_keys: Dict[str, Any] = response.get("UnprocessedKeys", {})
@@ -668,7 +670,7 @@ class _AsyncBatchWriter:
         self._store = store
         self._table_name = store.table.table_name
         self._client = store.client
-        self._items_buffer: List[WriteRequestOutputTypeDef] = []
+        self._items_buffer: List[WriteRequestTypeDef] = []
         self._flush_amount = flush_amount
         self._overwrite_by_keys = store.table_key_fields
 

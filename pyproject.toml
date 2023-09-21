@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nhs_aws_helpers"
-version = "0.0.0"
+version = "0.3.2.dev20230921142822"
 description = ""
 authors = ["spinecore"]
 license = "MIT"
@@ -42,7 +42,7 @@ ipython = "^8.12.2"
 
 [tool.black]
 line-length = 120
-target-version = ['py38', 'py39', 'py310']
+target-version = ['py38', 'py39', 'py310', 'py311']
 include = '\.pyi?$'
 #extend-exclude = '''
 #/(
@@ -122,13 +122,14 @@ profile = "black"
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py38,py39,py310
+envlist = py38,py39,py310,py311
 
 [gh-actions]
 python =
     3.8: py38
     3.9: py39
     3.10: py310
+    3.11: py311
 
 [testenv]
 deps =
@@ -147,7 +148,7 @@ commands =
 
 
 [tool.poetry-dynamic-versioning]
-enable = true
+enable = false
 metadata = false
 vcs = "git"
 style = "pep440"

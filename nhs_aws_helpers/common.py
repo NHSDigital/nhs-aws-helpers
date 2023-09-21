@@ -40,9 +40,9 @@ _NoneType = type(None)
 
 def optional_origin_type(original_type: type) -> type:
     """
-    if the target type is Optional, this will return the wrapped type
+    if the target type is Optional or a Union[xxx, None] this will return the wrapped type
     """
-    if original_type.__class__.__name__ != "_UnionGenericAlias":
+    if original_type.__class__.__name__ not in ("_UnionGenericAlias", "UnionType", "_GenericAlias"):
         return original_type
     args = typing.get_args(original_type)
     if len(args) != 2:

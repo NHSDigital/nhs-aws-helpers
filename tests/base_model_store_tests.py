@@ -3,7 +3,7 @@ import random
 import sys
 from dataclasses import dataclass, field
 from datetime import date, datetime
-from typing import Any, Dict, Generator, List, Mapping, Optional, Type, TypedDict
+from typing import Any, Dict, Generator, List, Mapping, Optional, Type, TypedDict, Union
 from uuid import uuid4
 
 import petname  # type: ignore[import]
@@ -117,6 +117,7 @@ class MyDerivedModel(MyBaseModel):
     none_list: Optional[List[str]] = None
     nested_items: List[NestedItem] = field(default_factory=list)
     nested_item: NestedItem = field(default_factory=lambda: NestedItem(event="created"))
+    union_date: Union[datetime, None] = field(default_factory=datetime.utcnow)
 
     def get_key(self) -> _MyModelKey:
         return _MyModelKey(my_pk=f"AA#{self.id}", my_sk=self.sk_field or "#")
@@ -527,6 +528,8 @@ async def test_transact_get_put_model(store: MyModelStore):
 
     assert got
     assert got.id == model.id
+    assert got.union_date is not None
+    assert isinstance(got.union_date, datetime)
 
 
 async def test_transact_get_models(store: MyModelStore):

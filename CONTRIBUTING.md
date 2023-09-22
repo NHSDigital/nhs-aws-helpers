@@ -47,7 +47,7 @@ make tox
 
 ### linting
 project uses:
-- [flake8](https://pypi.org/project/flake8/)
+- [ruff](https://docs.astral.sh/ruff/)
 - [mypy](https://pypi.org/project/mypy/)
 
 run both with 
@@ -60,13 +60,12 @@ make mypy
 ```
 or
 ```shell
-make flake8 
+make ruff 
 ```
 
 
 ### formatting code
 project uses:
-- [isort](https://pypi.org/project/isort/)
 - [black](https://pypi.org/project/black/)
 
 lint checks will fail if the code is not formaated correctly

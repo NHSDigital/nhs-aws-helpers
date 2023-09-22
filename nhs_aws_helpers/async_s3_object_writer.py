@@ -62,7 +62,7 @@ class AsyncS3ObjectWriter:
         return self._closed
 
     def fileno(self):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def flush(self):
         await self._maybe_write()
@@ -83,29 +83,29 @@ class AsyncS3ObjectWriter:
         return self._position
 
     def truncate(self, size=None):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @staticmethod
     def writable() -> bool:
         return True
 
     def read(self, num_bytes: int = ...) -> AnyStr:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def readline(self, limit: int = ...) -> AnyStr:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def readlines(self, hint: int = ...) -> List[AnyStr]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def seek(self, offset: int, whence: int = ...) -> int:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __next__(self) -> AnyStr:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __iter__(self) -> Iterator[AnyStr]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def writelines(self, lines: List[AnyStr]) -> None:
         for arg in lines:
@@ -133,7 +133,7 @@ class AsyncS3ObjectWriter:
         if len(self._upload_errors) < 1:
             return
 
-        raise RuntimeError() from self._upload_errors[0]
+        raise RuntimeError from self._upload_errors[0]
 
     async def _start_next_part_upload(self):
 
@@ -198,7 +198,7 @@ class AsyncS3ObjectWriter:
         result = await run_in_executor(
             multipart_upload.complete,
             MultipartUpload={
-                "Parts": [dict(ETag=part.e_tag, PartNumber=part.part_number) for part in multipart_upload.parts.all()]
+                "Parts": [{"ETag": part.e_tag, "PartNumber": part.part_number} for part in multipart_upload.parts.all()]
             },
         )
         assert result

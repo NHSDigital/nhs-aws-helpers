@@ -32,17 +32,17 @@ def session_temp_s3_bucket() -> Generator[Bucket, None, None]:
     bucket.delete()
 
 
-@pytest.fixture(scope="function")
-def temp_s3_bucket(session_temp_s3_bucket) -> Generator[Bucket, None, None]:  # pylint: disable=redefined-outer-name
+@pytest.fixture()
+def temp_s3_bucket(session_temp_s3_bucket: Bucket) -> Bucket:  # pylint: disable=redefined-outer-name
 
     bucket = session_temp_s3_bucket
 
     bucket.objects.all().delete()
 
-    yield bucket
+    return bucket
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def temp_event_bus() -> Generator[Tuple[Queue, str], None, None]:
 
     events = events_client()
@@ -60,7 +60,7 @@ def temp_event_bus() -> Generator[Tuple[Queue, str], None, None]:
     queue_arn = f"arn:aws:sqs:eu-west-2:000000000000:{queue_name}"
     target_id = f"temp-{petname.generate()}"
     events.put_targets(
-        Targets=[dict(Id=target_id, Arn=queue_arn)],
+        Targets=[{"Id": target_id, "Arn": queue_arn}],
         EventBusName=bus_name,
         Rule=rule_name,
     )
@@ -74,7 +74,7 @@ def temp_event_bus() -> Generator[Tuple[Queue, str], None, None]:
     events.delete_event_bus(Name=bus_name)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def temp_queue() -> Generator[Queue, None, None]:
     sqs = sqs_resource()
 
@@ -86,13 +86,13 @@ def temp_queue() -> Generator[Queue, None, None]:
     queue.delete()
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def temp_fifo_queue() -> Generator[Queue, None, None]:
 
     sqs = sqs_resource()
 
     queue_name = f"local-{petname.Generate(words=2, separator='-')}.fifo"
-    queue = sqs.create_queue(QueueName=queue_name, Attributes=dict(FifoQueue="true", VisibilityTimeout="2"))
+    queue = sqs.create_queue(QueueName=queue_name, Attributes={"FifoQueue": "true", "VisibilityTimeout": "2"})
 
     yield queue
 

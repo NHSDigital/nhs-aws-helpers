@@ -126,7 +126,7 @@ def test_read_all():
     with s3_reader_text() as reader:
         body = reader.read()
 
-    assert _S3_TEXT_BODY == body
+    assert body == _S3_TEXT_BODY
 
 
 def test_read_n() -> None:
@@ -137,7 +137,7 @@ def test_read_n() -> None:
     with s3_reader_text() as reader:
         chunk = reader.read(size)
         pos = 0
-        assert _DEFAULT_BUFFER_SIZE == len(reader._buffer.encode("utf-8"))  # type: ignore[union-attr]
+        assert len(reader._buffer.encode("utf-8")) == _DEFAULT_BUFFER_SIZE  # type: ignore[union-attr]
 
         while chunk:
             chunks.append(chunk)
@@ -220,7 +220,7 @@ def test_seek_relative() -> None:
 
             assert pos == min((i + 1) * 100, _NON_ASCII_TEXT_BODY_LEN)
 
-        assert _NON_ASCII_TEXT_BODY_LEN == pos
+        assert pos == _NON_ASCII_TEXT_BODY_LEN
 
         for i in range(7):
             pos = reader.seek(-100, SEEK_CUR)
@@ -231,7 +231,7 @@ def test_seek_relative() -> None:
 
         read_all = reader.read()
 
-        assert _NON_ASCII_S3_TEXT_BODY == read_all
+        assert read_all == _NON_ASCII_S3_TEXT_BODY
 
 
 def test_read_line() -> None:
@@ -252,9 +252,8 @@ def test_read_line() -> None:
 
 
 def test_read_line_on_binary_object():
-    with pytest.raises(ValueError):
-        with s3_reader_binary() as reader:
-            reader.readline()
+    with pytest.raises(ValueError, match="readline only works if _encoding was defined"), s3_reader_binary() as reader:
+        reader.readline()
 
 
 def test_read_lines() -> None:
@@ -264,25 +263,14 @@ def test_read_lines() -> None:
 
         assert (_TEXT[0]) == line
 
-        lines = []
-        for line in reader.readlines():
-            lines.append(line)
+        lines = list(reader.readlines())
 
         assert (_TEXT[1:]) == lines
 
 
-def inext(asequence, default=None):
-    """Asynchronously enumerate an async iterator from a given start value"""
-
-    for elem in asequence:
-        return elem
-
-    return default
-
-
 def test_read_lines_on_binary_object():
-    with pytest.raises(ValueError):
-        inext(s3_reader_binary().readlines())
+    with pytest.raises(ValueError, match="readlines only works if _encoding was defined"):
+        list(s3_reader_binary().readlines())
 
 
 def test_iter() -> None:
@@ -300,7 +288,7 @@ def test_write_binary(temp_s3_bucket) -> None:
 
     read = temp_s3_bucket.Object(key).get()["Body"].read()
 
-    assert _BINARY == read
+    assert read == _BINARY
 
 
 def test_write_binary_then_nothing(temp_s3_bucket) -> None:
@@ -313,7 +301,7 @@ def test_write_binary_then_nothing(temp_s3_bucket) -> None:
 
     read = temp_s3_bucket.Object(key).get()["Body"].read()
 
-    assert _BINARY == read
+    assert read == _BINARY
 
 
 def test_write_string(temp_s3_bucket) -> None:
@@ -325,7 +313,7 @@ def test_write_string(temp_s3_bucket) -> None:
 
     read = temp_s3_bucket.Object(key).get()["Body"].read()
     decoded = read.decode("utf-8")
-    assert _S3_TEXT_BODY == decoded
+    assert decoded == _S3_TEXT_BODY
 
 
 def test_write_lines_string(temp_s3_bucket) -> None:
@@ -337,7 +325,7 @@ def test_write_lines_string(temp_s3_bucket) -> None:
 
     read = temp_s3_bucket.Object(key).get()["Body"].read()
     decoded = read.decode("utf-8")
-    assert _S3_TEXT_BODY == decoded
+    assert decoded == _S3_TEXT_BODY
 
 
 def test_upload_large_multipart_file(temp_s3_bucket) -> None:

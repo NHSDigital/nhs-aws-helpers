@@ -46,7 +46,7 @@ class AsyncS3ObjectReader:
     async def __anext__(self):
         line = await self.readline()
         if line is None:
-            raise StopIteration()
+            raise StopIteration
 
         return line.strip()
 
@@ -75,7 +75,7 @@ class AsyncS3ObjectReader:
         return self._s3_obj.key
 
     def flush(self):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def close(self):
 
@@ -239,7 +239,7 @@ class AsyncS3ObjectReader:
         return self._position
 
     def truncate(self, size=None):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @staticmethod
     def writable() -> bool:

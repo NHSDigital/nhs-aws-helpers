@@ -21,7 +21,10 @@ from nhs_aws_helpers.dynamodb_model_store.base_model_store import (
     PagedItems,
 )
 
-_MyModelKey = TypedDict("_MyModelKey", {"my_pk": str, "my_sk": str})
+
+class _MyModelKey(TypedDict):
+    my_pk: str
+    my_sk: str
 
 
 @pytest.mark.skipif(sys.version_info < (3, 10), reason="requires python3.10 or higher")
@@ -71,7 +74,7 @@ def test_create_model_store_without_base_model_type():
     class BadModelStore(BaseModelStore[BaseModel, _MyModelKey]):
         pass
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=f"{BadModelStore.__name__} needs a _base_model_type definition"):
         BadModelStore("no")
 
 
@@ -103,7 +106,7 @@ class NestedItem:
 
 @dataclass
 class MyDerivedModel(MyBaseModel):
-    id: str
+    id: str  # noqa: A003
     sk_field: Optional[str] = None
     optional_thing: Optional[str] = None
 
@@ -133,7 +136,7 @@ class MyDerivedModel(MyBaseModel):
 
 @dataclass
 class AnotherModel(MyBaseModel):
-    id: str
+    id: str  # noqa: A003
     sk_field: Optional[str] = None
     last_modified: datetime = field(default_factory=datetime.utcnow)
 
@@ -146,7 +149,7 @@ class AnotherModel(MyBaseModel):
 
 @dataclass
 class UnregisteredModel(MyBaseModel):
-    id: str
+    id: str  # noqa: A003
     sk_field: Optional[str] = None
     last_modified: datetime = field(default_factory=datetime.utcnow)
 
@@ -168,7 +171,7 @@ class NotSerializable:
 
 @dataclass
 class ASpecialDerivedModel(MyBaseModel):
-    id: str
+    id: str  # noqa: A003
     special_field: NotSerializable
     events: List[NestedItem] = field(default_factory=list)
     last_modified: datetime = field(default_factory=datetime.utcnow)
@@ -196,7 +199,7 @@ def test_create_model():
 class MyModelStore(BaseModelStore[MyBaseModel, _MyModelKey]):
 
     _base_model_type = MyBaseModel
-    _model_types = {cls.__name__: cls for cls in [MyDerivedModel, AnotherModel, ASpecialDerivedModel]}
+    _model_types = {cls.__name__: cls for cls in [MyDerivedModel, AnotherModel, ASpecialDerivedModel]}  # noqa: RUF012
 
     def __init__(self, table_name: str):
         super().__init__(table_name, model_type_index_name="gsi_model_type", model_type_index_pk="model_type")
@@ -231,7 +234,7 @@ class MyModelStore(BaseModelStore[MyBaseModel, _MyModelKey]):
 
 
 @pytest.fixture(scope="session", name="session_temp_ddb_table")
-def _create_session_temp_ddb_table() -> Generator[Table, None, None]:
+def create_session_temp_ddb_table() -> Generator[Table, None, None]:
     ddb = dynamodb()
 
     args = {
@@ -264,8 +267,8 @@ def _create_session_temp_ddb_table() -> Generator[Table, None, None]:
     table.delete()
 
 
-@pytest.fixture(scope="function", name="temp_table")
-def _create_temp_ddb_table(session_temp_ddb_table) -> Generator[Table, None, None]:
+@pytest.fixture(name="temp_table")
+def create_temp_ddb_table(session_temp_ddb_table: Table) -> Table:
     table = session_temp_ddb_table
     result = table.scan(ProjectionExpression="my_pk, my_sk", ConsistentRead=True)
     with table.batch_writer(["my_pk", "my_sk"]) as writer:
@@ -274,24 +277,24 @@ def _create_temp_ddb_table(session_temp_ddb_table) -> Generator[Table, None, Non
             if not items:
                 break
             for item in items:
-                writer.delete_item(dict(my_pk=item["my_pk"], my_sk=item["my_sk"]))
-            if len(writer._items_buffer) > 0:  # pylint: disable=protected-access
-                writer._flush()  # pylint: disable=protected-access
+                writer.delete_item({"my_pk": item["my_pk"], "my_sk": item["my_sk"]})
+            if len(writer._items_buffer) > 0:  # type: ignore[attr-defined]
+                writer._flush()  # type: ignore[attr-defined]
             if not result.get("LastEvaluatedKey"):
                 break
 
-    yield table
+    return table
 
 
-@pytest.fixture(scope="function", name="store")
-def _create_temp_store(temp_table: Table):
+@pytest.fixture(name="store")
+def create_temp_store(temp_table: Table):
 
     return MyModelStore(temp_table.name)
 
 
 async def test_store_get_item(store: MyModelStore):
     pk = uuid4().hex
-    item = dict(my_pk=pk, my_sk="#", field=uuid4().hex)
+    item = {"my_pk": pk, "my_sk": "#", "field": uuid4().hex}
     store.table.put_item(Item=item)
 
     result = await store.get_item(_MyModelKey(my_pk=pk, my_sk="#"))
@@ -301,7 +304,7 @@ async def test_store_get_item(store: MyModelStore):
 
 async def test_store_put_get_item(store: MyModelStore):
     pk = uuid4().hex
-    item = dict(my_pk=pk, my_sk="#", field=uuid4().hex)
+    item = {"my_pk": pk, "my_sk": "#", "field": uuid4().hex}
 
     await store.put_item(item)
 
@@ -384,12 +387,12 @@ async def test_store_put_model_if_not_exists(store: MyModelStore):
 
 async def test_store_put_item_if_not_exists(store: MyModelStore):
 
-    original = dict(my_pk=uuid4().hex, my_sk="A", field=uuid4().hex)
+    original = {"my_pk": uuid4().hex, "my_sk": "A", "field": uuid4().hex}
 
     was_put = await store.put_item_if_not_exists(original)
     assert was_put
 
-    new = dict(my_pk=original["my_pk"], my_sk="A", field=uuid4().hex)
+    new = {"my_pk": original["my_pk"], "my_sk": "A", "field": uuid4().hex}
 
     was_put = await store.put_item_if_not_exists(new)
     assert not was_put
@@ -422,7 +425,7 @@ async def test_query_and_unpack_paged_items(store: MyModelStore):
 
     async with store.batch_writer() as writer:
         for i in range(30):
-            await writer.put_item(dict(my_pk=partition_key, my_sk=f"SK#{i}"))
+            await writer.put_item({"my_pk": partition_key, "my_sk": f"SK#{i}"})
 
     items, last_evaluated_key = await store.query_items(KeyConditionExpression=Key("my_pk").eq(partition_key))
 
@@ -436,7 +439,7 @@ async def test_query_and_unpack_paged_items_with_limit(store: MyModelStore):
 
     async with store.batch_writer() as writer:
         for i in range(20):
-            await writer.put_item(dict(my_pk=partition_key, my_sk=f"SK#{i}"))
+            await writer.put_item({"my_pk": partition_key, "my_sk": f"SK#{i}"})
 
     items, last_evaluated_key = await store.query_items(KeyConditionExpression=Key("my_pk").eq(partition_key), Limit=10)
 
@@ -450,11 +453,12 @@ async def test_query_paginate_items(store: MyModelStore):
 
     async with store.batch_writer() as writer:
         for i in range(20):
-            await writer.put_item(dict(my_pk=partition_key, my_sk=f"SK#{i}"))
+            await writer.put_item({"my_pk": partition_key, "my_sk": f"SK#{i}"})
 
-    pages = []
-    async for page in store.paginate_items("query", KeyConditionExpression=Key("my_pk").eq(partition_key), Limit=10):
-        pages.append(page)
+    pages = [
+        page
+        async for page in store.paginate_items("query", KeyConditionExpression=Key("my_pk").eq(partition_key), Limit=10)
+    ]
 
     assert len(pages) == 3
     assert len(pages[0].items) == 10
@@ -563,7 +567,7 @@ async def test_query_all_items(store: MyModelStore):
 
     async with store.batch_writer() as writer:
         for i in range(20):
-            await writer.put_item(dict(my_pk=partition_key, my_sk=f"SK:{i}"))
+            await writer.put_item({"my_pk": partition_key, "my_sk": f"SK:{i}"})
 
     items = await store.query_all_items(KeyConditionExpression=Key("my_pk").eq(partition_key))
 
@@ -621,7 +625,7 @@ async def test_query_count(store: MyModelStore):
 
     async with store.batch_writer() as writer:
         for i in range(100):
-            await writer.put_item(dict(my_pk=partition_key, my_sk=f"SK:{i}"))
+            await writer.put_item({"my_pk": partition_key, "my_sk": f"SK:{i}"})
 
     count = await store.query_count(KeyConditionExpression=Key("my_pk").eq(partition_key))
 
@@ -635,7 +639,7 @@ async def test_query_count(store: MyModelStore):
 async def test_get_all_models(store: MyModelStore):
 
     async with store.batch_writer() as writer:
-        for i in range(100):
+        for _i in range(100):
             await writer.put_item(AnotherModel(uuid4().hex))
 
     models = await store.get_all_models(AnotherModel)
@@ -652,12 +656,12 @@ async def test_paginate_models(store: MyModelStore):
         for i in range(100):
             await writer.put_item(AnotherModel(id="1", sk_field=f"SK:{i}"))
 
-    pages = []
-
-    async for page in store.paginate_models(
-        "query", AnotherModel, KeyConditionExpression=Key("my_pk").eq(partition_key), Limit=40
-    ):
-        pages.append(page)
+    pages = [
+        page
+        async for page in store.paginate_models(
+            "query", AnotherModel, KeyConditionExpression=Key("my_pk").eq(partition_key), Limit=40
+        )
+    ]
 
     assert len(pages) == 3
 

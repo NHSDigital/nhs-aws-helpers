@@ -22,21 +22,21 @@ from tests.utils import temp_env_vars
 
 
 @pytest.mark.parametrize(
-    "error, expected_reasons",
+    ("error", "expected_reasons"),
     [
         (
-            dict(
-                Message="Transaction cancelled, [eeek] reasons [None, ConditionalCheckFailed, None, None, None]",
-                Code="TransactionCanceledException",
-            ),
+            {
+                "Message": "Transaction cancelled, [eeek] reasons [None, ConditionalCheckFailed, None, None, None]",
+                "Code": "TransactionCanceledException",
+            },
             ["None", "ConditionalCheckFailed", "None", "None", "None"],
         ),
-        (dict(Message="Transaction cancelled, [eeek] specific reasons []", Code="TransactionCanceledException"), []),
-        (dict(Message="Transaction cancelled, [eeek] specific reasons []", Code="Another"), []),
+        ({"Message": "Transaction cancelled, [eeek] specific reasons []", "Code": "TransactionCanceledException"}, []),
+        ({"Message": "Transaction cancelled, [eeek] specific reasons []", "Code": "Another"}, []),
     ],
 )
 def test_transaction_cancellation_reasons(error, expected_reasons):
-    reasons = transaction_cancellation_reasons(ClientError(dict(Error=error), "TransactWriteItems"))
+    reasons = transaction_cancellation_reasons(ClientError({"Error": error}, "TransactWriteItems"))
     assert reasons == expected_reasons
 
 
@@ -60,7 +60,7 @@ def test_ddb_retries_all_fail():
 def test_s3_list_folders_root(temp_s3_bucket: Bucket):
     expected_folder = uuid4().hex
 
-    temp_s3_bucket.put_object(Key=f"{expected_folder}/filename.txt", Body=f"Some data {uuid4().hex}".encode("utf-8"))
+    temp_s3_bucket.put_object(Key=f"{expected_folder}/filename.txt", Body=f"Some data {uuid4().hex}".encode())
 
     folders = s3_list_folders(temp_s3_bucket.name, "")
 
@@ -69,7 +69,7 @@ def test_s3_list_folders_root(temp_s3_bucket: Bucket):
 
 
 def test_s3_list_folders_subfolder_multiple_found(temp_s3_bucket: Bucket):
-    some_body = f"Some data {uuid4().hex}".encode("utf-8")
+    some_body = f"Some data {uuid4().hex}".encode()
     prefix = f"{uuid4().hex}/"
 
     expected_folder1 = uuid4().hex
@@ -93,7 +93,7 @@ def test_s3_list_folders_subfolder_multiple_found(temp_s3_bucket: Bucket):
 
 
 @pytest.mark.parametrize(
-    "is_resource, expected_exception_message",
+    ("is_resource", "expected_exception_message"),
     [
         (
             True,
@@ -130,24 +130,23 @@ def test_s3_retries(
         },
     )
 
-    with pytest.raises(ClientError) as ex:
-        with temp_env_vars(
-            # Point any new boto resources or clients at our fake endpoint
-            AWS_ENDPOINT_URL=f"http://localhost:{server_port}",
-        ):
-            original_log_level = logging.getLogger("werkzeug").level
-            try:
-                # Avoid werkzeug logs cluttering our logs
-                logging.getLogger("werkzeug").setLevel(logging.WARNING)
-                if is_resource:
-                    s3_resource(config=config).Bucket(temp_s3_bucket.name).put_object(
-                        Key=f"{key}", Body=f"Some data {uuid4().hex}".encode("utf-8")
-                    )
-                else:
-                    s3_client(config=config).list_buckets()
+    with pytest.raises(ClientError) as ex, temp_env_vars(  # noqa: PT012
+        # Point any new boto resources or clients at our fake endpoint
+        AWS_ENDPOINT_URL=f"http://localhost:{server_port}",
+    ):
+        original_log_level = logging.getLogger("werkzeug").level
+        try:
+            # Avoid werkzeug logs cluttering our logs
+            logging.getLogger("werkzeug").setLevel(logging.WARNING)
+            if is_resource:
+                s3_resource(config=config).Bucket(temp_s3_bucket.name).put_object(
+                    Key=f"{key}", Body=f"Some data {uuid4().hex}".encode()
+                )
+            else:
+                s3_client(config=config).list_buckets()
 
-            finally:
-                logging.getLogger("werkzeug").setLevel(original_log_level)
+        finally:
+            logging.getLogger("werkzeug").setLevel(original_log_level)
 
     assert str(ex.value) == expected_exception_message
 
@@ -218,10 +217,8 @@ def test_s3_upload_multipart_from_copy_missing_part_data(temp_s3_bucket: Bucket)
 
     target_object = temp_s3_bucket.Object(uuid)
 
-    with pytest.raises(IOError) as upload_error:
+    with pytest.raises(IOError, match=f"Failed to multipart_upload {{'{uuid}_2'}} after 5 attempts"):
         s3_upload_multipart_from_copy(target_object, part_keys)
-
-    assert str(upload_error.value) == f"Failed to multipart_upload {{'{uuid}_2'}} after 5 attempts"
 
     with pytest.raises(ClientError) as client_error:
         target_object.get()

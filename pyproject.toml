@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nhs_aws_helpers"
-version = "0.3.2.dev20230921142822"
+version = "0.3.3.dev20230922133011"
 description = ""
 authors = ["spinecore"]
 license = "MIT"
@@ -25,16 +25,13 @@ botocore-stubs = "^1.29.159"
 # ci / testing dependencies
 petname = "^2.6"
 black = "^22.12.0"
-isort = "^5.12.0"
 mypy = "^1.4.0"
 coverage = "^7.2.7"
 pytest = "^7.3.1"
 pytest-asyncio = "^0.21.0"
-flake8 = "^6.0.0"
-flake8-pyproject = "^1.2.3"
-flake8-black = "^0.3.6"
 tox = "^4.6.3"
 pytest-httpserver = "^1.0.8"
+ruff = "^0.0.290"
 
 
 [tool.poetry.group.local.dependencies]
@@ -53,22 +50,42 @@ include = '\.pyi?$'
 #)/
 #'''
 
-[tool.flake8]
-ignore = ["E203", "W503"]
+
+[tool.ruff]
+select = [
+    # See https://beta.ruff.rs/docs/rules/ for a full list
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+    "Q", # flake8-quotes
+    "YTT", # flake8-2020
+    "RSE", # flake8-raise
+    "T10", # flake8-debugger
+    "ISC", # flake8-implicit-str-concat
+    "ICN", # flake8-import-conventions
+    "PIE", # flake8-pie
+    "EXE", # flake8-executable
+    "A", # flake8-builtins
+    "UP",  # pyupgrade
+    "PT", # flake8-pytest-style
+    "PERF", # Perflint #
+    "RUF", # Ruff-specific rules
+    "SIM", # flake8-simplify
+]
+src = ["."]
+ignore = [
+    "PT004"
+]
 exclude = [
     ".git",
-    "__pycache__",
     ".venv",
-    "build",
-    "dist",
-    ".tox"
 ]
-#extend-ignore = ["E203"]
-#per-file-ignores = [
-#    '__init__.py:F401',
-#]
-max-line-length = 120
-count = true
+unfixable = ["SIM112"]
+line-length = 120
+target-version = "py38"
 
 
 
@@ -115,9 +132,6 @@ warn_return_any = true
 warn_unused_configs = true
 show_error_codes = true
 check_untyped_defs = true
-
-[tool.isort]
-profile = "black"
 
 [tool.tox]
 legacy_tox_ini = """

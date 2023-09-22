@@ -46,8 +46,7 @@ def model_properties_cache(model_type: Type[BaseModel]) -> List[Tuple[str, type,
     model_fields: List[Tuple[str, type, Mapping[str, Any]]] = []
 
     if is_dataclass(model_type):
-        for field in fields(model_type):
-            model_fields.append((field.name, field.type, field.metadata))
+        model_fields.extend([(field.name, field.type, field.metadata) for field in fields(model_type)])
 
     for name, member in inspect.getmembers(model_type, lambda o: isinstance(o, serialised_property)):
         field_type = member.fget.__annotations__.get("return")

@@ -9,7 +9,7 @@ from nhs_aws_helpers.fixtures import temp_dynamodb_table
 
 
 @pytest.fixture(scope="session", name="source_ddb_table")
-def _a_ddb_table() -> Generator[Table, None, None]:
+def a_ddb_table() -> Generator[Table, None, None]:
     ddb = dynamodb()
 
     args = {
@@ -43,13 +43,13 @@ def _a_ddb_table() -> Generator[Table, None, None]:
     table.delete()
 
 
-@pytest.fixture(scope="function", name="cloned_table_defaults")
+@pytest.fixture(name="cloned_table_defaults")
 def _on_demand_table(source_ddb_table: Table) -> Generator[Table, None, None]:
 
     yield from temp_dynamodb_table(source_ddb_table.table_name)
 
 
-@pytest.fixture(scope="function", name="cloned_table_provisioned")
+@pytest.fixture(name="cloned_table_provisioned")
 def _provisioned_table(source_ddb_table: Table) -> Generator[Table, None, None]:
 
     yield from temp_dynamodb_table(source_ddb_table.table_name, on_demand_billing_mode=False, provisioned_capacity=99)

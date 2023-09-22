@@ -1,3 +1,4 @@
+import sys
 from io import SEEK_CUR, SEEK_END, BytesIO
 from time import time
 from typing import Any, List, cast
@@ -126,7 +127,7 @@ async def test_read_all() -> None:
     async with s3_reader_text() as reader:
         body = await reader.read()
 
-    assert _S3_TEXT_BODY == body
+    assert body == _S3_TEXT_BODY
 
 
 async def test_read_n() -> None:
@@ -139,7 +140,7 @@ async def test_read_n() -> None:
 
         pos = 0
 
-        assert _DEFAULT_BUFFER_SIZE == len(reader._buffer.encode("utf-8"))
+        assert len(reader._buffer.encode("utf-8")) == _DEFAULT_BUFFER_SIZE
 
         while chunk:
             chunks.append(chunk)
@@ -225,7 +226,7 @@ async def test_seek_relative() -> None:
 
             assert pos == min((i + 1) * 100, _NON_ASCII_TEXT_BODY_LEN)
 
-        assert _NON_ASCII_TEXT_BODY_LEN == pos
+        assert pos == _NON_ASCII_TEXT_BODY_LEN
 
         for i in range(7):
             pos = await reader.seek(-100, SEEK_CUR)
@@ -236,7 +237,7 @@ async def test_seek_relative() -> None:
 
         read_all = await reader.read()
 
-        assert _NON_ASCII_S3_TEXT_BODY == read_all
+        assert read_all == _NON_ASCII_S3_TEXT_BODY
 
 
 async def test_read_line() -> None:
@@ -257,7 +258,7 @@ async def test_read_line() -> None:
 
 
 async def test_read_line_on_binary_object():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="readline only works if _encoding was defined"):
         async with s3_reader_binary() as reader:
             await reader.readline()
 
@@ -269,23 +270,23 @@ async def test_read_lines() -> None:
 
         assert (_TEXT[0]) == line
 
-        lines = []
-        async for line in reader.readlines():
-            lines.append(line)
+        lines = [line async for line in reader.readlines()]
 
         assert (_TEXT[1:]) == lines
 
 
-async def anext(gen, default: Any = None):
-    async for el in gen:
-        return el
-    return default
+if sys.version_info < (3, 10):
+
+    async def anext(gen, default: Any = None):  # noqa: A001
+        async for el in gen:
+            return el
+        return default
 
 
 async def test_read_lines_on_binary_object():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="readlines only works if _encoding was defined"):
         async with s3_reader_binary() as reader:
-            await anext(reader.readlines())
+            await anext(reader.readlines())  # type: ignore[name-defined]
 
 
 async def aenumerate(asequence, start=0):
@@ -311,7 +312,7 @@ async def test_write_binary(temp_s3_bucket) -> None:
 
     read = temp_s3_bucket.Object(key).get()["Body"].read()
 
-    assert _BINARY == read
+    assert read == _BINARY
 
 
 async def test_write_binary_then_nothing(temp_s3_bucket) -> None:
@@ -324,7 +325,7 @@ async def test_write_binary_then_nothing(temp_s3_bucket) -> None:
 
     read = temp_s3_bucket.Object(key).get()["Body"].read()
 
-    assert _BINARY == read
+    assert read == _BINARY
 
 
 async def test_write_string(temp_s3_bucket) -> None:
@@ -336,7 +337,7 @@ async def test_write_string(temp_s3_bucket) -> None:
 
     read = temp_s3_bucket.Object(key).get()["Body"].read()
     decoded = read.decode("utf-8")
-    assert _S3_TEXT_BODY == decoded
+    assert decoded == _S3_TEXT_BODY
 
 
 async def test_write_lines_string(temp_s3_bucket) -> None:
@@ -348,7 +349,7 @@ async def test_write_lines_string(temp_s3_bucket) -> None:
 
     read = temp_s3_bucket.Object(key).get()["Body"].read()
     decoded = read.decode("utf-8")
-    assert _S3_TEXT_BODY == decoded
+    assert decoded == _S3_TEXT_BODY
 
 
 async def test_upload_large_multipart_file(temp_s3_bucket) -> None:

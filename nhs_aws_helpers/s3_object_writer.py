@@ -63,22 +63,22 @@ class S3ObjectWriter(IO):
         return not failed
 
     def read(self, n: int = ...) -> AnyStr:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def readline(self, limit: int = ...) -> AnyStr:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def readlines(self, hint: int = ...) -> List[AnyStr]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def seek(self, offset: int, whence: int = ...) -> int:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __next__(self) -> AnyStr:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __iter__(self) -> Iterator[AnyStr]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def mode(self) -> str:
@@ -102,10 +102,10 @@ class S3ObjectWriter(IO):
         return False
 
     def readinto(self, byte_array: bytearray) -> int:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def peek(self, num: Optional[int] = None) -> Union[str, bytes]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def seekable(self) -> bool:
         return False
@@ -117,7 +117,7 @@ class S3ObjectWriter(IO):
         return self._position
 
     def truncate(self, size=None):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def writable(self) -> bool:
         return True
@@ -147,7 +147,7 @@ class S3ObjectWriter(IO):
         if len(self._upload_errors) < 1:
             return
 
-        raise RuntimeError() from self._upload_errors[0]
+        raise RuntimeError from self._upload_errors[0]
 
     def _start_next_part_upload(self):
 
@@ -212,7 +212,7 @@ class S3ObjectWriter(IO):
         multipart_upload.complete(
             MultipartUpload={
                 "Parts": [
-                    dict(ETag=part.e_tag, PartNumber=int(part.part_number)) for part in multipart_upload.parts.all()
+                    {"ETag": part.e_tag, "PartNumber": int(part.part_number)} for part in multipart_upload.parts.all()
                 ]
             }
         )

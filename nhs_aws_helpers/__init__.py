@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import gzip
 import inspect
 import io
@@ -101,13 +102,11 @@ def convert_to_response_dict_with_socket_info(http_response, operation_model):
 
     # Then add the custom socket info. Put in a try catch in case there's an edge case
     # where there's no _original_response
-    try:
-        response_dict["socket"] = dict(
-            sock_name=cast(CustomHTTPResponse, http_response.raw._original_response).sock_name,
-            peer_name=cast(CustomHTTPResponse, http_response.raw._original_response).peer_name,
-        )
-    except:  # noqa: E722
-        pass
+    with contextlib.suppress(Exception):
+        response_dict["socket"] = {
+            "sock_name": cast(CustomHTTPResponse, http_response.raw._original_response).sock_name,
+            "peer_name": cast(CustomHTTPResponse, http_response.raw._original_response).peer_name,
+        }
 
     return response_dict
 
@@ -410,7 +409,7 @@ def s3_replace_tags(
     client = client or s3_resource(session=session, config=config).meta.client
 
     client.put_object_tagging(
-        Bucket=bucket, Key=key, Tagging={"TagSet": list(dict(Key=k, Value=v) for k, v in tags.items())}
+        Bucket=bucket, Key=key, Tagging={"TagSet": [{"Key": k, "Value": v} for k, v in tags.items()]}
     )
 
 
@@ -429,7 +428,7 @@ def s3_update_tags(
     existing_tags.update(tags)
 
     client.put_object_tagging(
-        Bucket=bucket, Key=key, Tagging={"TagSet": list(dict(Key=k, Value=v) for k, v in existing_tags.items())}
+        Bucket=bucket, Key=key, Tagging={"TagSet": [{"Key": k, "Value": v} for k, v in existing_tags.items()]}
     )
     return existing_tags
 
@@ -446,8 +445,8 @@ def s3_get_all_keys(
     page_iterator = paginator.paginate(Bucket=bucket, Prefix=prefix)
     keys = []
     for page in page_iterator:
-        for content in page["Contents"]:
-            keys.append(content["Key"])
+        keys.extend([content["Key"] for content in page["Contents"]])
+
     return keys
 
 
@@ -715,16 +714,14 @@ def s3_upload_multipart_from_copy(
             attempt += 1
             futures = [executor.submit(copy_part, key, attempt) for key in outstanding_part_keys]
             for future in as_completed(futures):
-                try:
+                with contextlib.suppress(BaseException):
+                    # Exception will be logged on copy_part()
                     # This will raise an exception if a future has raised an exception
                     key = future.result()
                     outstanding_part_keys.remove(key)
-                except BaseException:
-                    # Exception will be logged on copy_part()
-                    pass
 
             if outstanding_part_keys and attempt > max_retries:
-                raise IOError(f"Failed to multipart_upload {outstanding_part_keys} after {attempt} attempts")
+                raise OSError(f"Failed to multipart_upload {outstanding_part_keys} after {attempt} attempts")
 
     return multipart_upload.complete(
         MultipartUpload={
@@ -895,7 +892,7 @@ class DDBRetryBackoff:
 
                     return result
 
-                except ClientError as err:
+                except ClientError as err:  # noqa: PERF203
 
                     if not self._should_retry(err, retries):
                         raise
@@ -914,7 +911,7 @@ class DDBRetryBackoff:
 
                     return result
 
-                except ClientError as err:
+                except ClientError as err:  # noqa: PERF203
 
                     if not self._should_retry(err, retries):
                         raise
@@ -1042,13 +1039,12 @@ def s3_gunzip(
     if not s3obj:
         raise Exception(f"Unknown S3 error when putting empty buffer to {destination_url}") from UnknownServiceError
 
-    with gzip.GzipFile(mode="rb", fileobj=down_stream) as zipfile:  # type: ignore[call-overload]
-        with S3ObjectWriter(s3obj, encoding=None) as new_obj_buff:
-            buf = b" "
-            while buf:
-                buf = zipfile.read(io.DEFAULT_BUFFER_SIZE * 1000)
-                if buf:
-                    new_obj_buff.write(buf)
+    with gzip.GzipFile(mode="rb", fileobj=down_stream) as zipfile, S3ObjectWriter(s3obj, encoding=None) as new_obj_buff:
+        buf = b" "
+        while buf:
+            buf = zipfile.read(io.DEFAULT_BUFFER_SIZE * 1000)
+            if buf:
+                new_obj_buff.write(buf)
 
 
 def assumed_credentials(
@@ -1135,10 +1131,9 @@ async def async_stream_from_s3(
         chunk = await run_in_executor(body.read, bytes_per_chunk)
     if body.closed:
         return
-    try:
+
+    with contextlib.suppress(Exception):
         body.close()
-    except:  # noqa: E722
-        pass
 
 
 _RE_CANCELLATION_REASONS = re.compile(r"^.+\[(\w+[^\]]*?)\]$")
@@ -1164,7 +1159,7 @@ def transaction_cancelled_for_only_reasons(err: ClientError, *match_reason: str)
     returns all reasons ... if all reasons either match match_reason or 'None'
     """
     reasons = transaction_cancellation_reasons(err)
-    match_reasons = set(["None"] + list(match_reason))
+    match_reasons = {"None", *list(match_reason)}
     return reasons if all(reason in match_reasons for reason in reasons) else []
 
 

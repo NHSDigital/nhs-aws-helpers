@@ -45,7 +45,7 @@ class S3ObjectReader(IO):
     def __next__(self):
         line = self.readline()
         if line is None:
-            raise StopIteration()
+            raise StopIteration
 
         return line.strip()
 
@@ -60,10 +60,10 @@ class S3ObjectReader(IO):
         return True
 
     def write(self, s: Any) -> int:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def writelines(self, lines: Iterable[Any]) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def mode(self) -> str:
@@ -100,7 +100,7 @@ class S3ObjectReader(IO):
         self._closed = True
 
     def flush(self):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def readable(self):
         return self.body and (self._fully_read or not self._closed)
@@ -241,7 +241,7 @@ class S3ObjectReader(IO):
         return self._position
 
     def truncate(self, size=None):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def writable(self) -> bool:
         return False

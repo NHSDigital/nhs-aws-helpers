@@ -83,7 +83,7 @@ class PagedItems(Generic[TPageItem]):
 class BaseModelStore(Generic[TBaseModel, TModelKey]):
 
     _base_model_type: Type[TBaseModel]
-    _model_types: Dict[str, Type[TBaseModel]] = {}
+    _model_types: Dict[str, Type[TBaseModel]] = {}  # noqa: RUF012
 
     def __new__(cls, *args, **kwargs):
         if (
@@ -169,7 +169,7 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
             return frozenset(val for val in value)
 
         if origin_type == set:
-            return set(val for val in value)
+            return set(value)
 
         return value
 
@@ -640,7 +640,7 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
             results[ix] = record
 
         if unexpected:
-            raise ValueError(f"unexpected items in batch result: {[key for key in unexpected]}")
+            raise ValueError(f"unexpected items in batch result: {list(unexpected)}")
 
         return results
 

@@ -75,6 +75,7 @@ from mypy_boto3_sns.client import SNSClient
 from mypy_boto3_sqs import SQSServiceResource
 from mypy_boto3_sqs.client import SQSClient
 from mypy_boto3_ssm.client import SSMClient
+from mypy_boto3_stepfunctions import SFNClient
 
 from nhs_aws_helpers.common import run_in_executor
 from nhs_aws_helpers.s3_object_writer import S3ObjectWriter
@@ -212,6 +213,10 @@ def athena_client(session: Optional[Session] = None, config: Optional[Config] = 
 
 def lambdas(session: Optional[Session] = None, config: Optional[Config] = None) -> LambdaClient:
     return _aws("lambda", "client", session, config)  # type: ignore[no-any-return]
+
+
+def stepfunctions(session: Optional[Session] = None, config: Optional[Config] = None) -> SFNClient:
+    return _aws("stepfunctions", "client", session, config)  # type: ignore[no-any-return]
 
 
 def s3_resource(session: Optional[Session] = None, config: Optional[Config] = None) -> S3ServiceResource:

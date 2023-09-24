@@ -16,9 +16,9 @@ jobs:
           fetch-depth: 0
 
       - name: setup python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.8"
+          python-version-file: "pyproject.toml"
 
       - name: setup poetry
         uses: abatilo/actions-poetry@v2
@@ -108,9 +108,9 @@ jobs:
           find . -type f | xargs chmod g+w
 
       - name: setup python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.8"
+          python-version-file: "pyproject.toml"
 
       - name: setup poetry
         uses: abatilo/actions-poetry@v2

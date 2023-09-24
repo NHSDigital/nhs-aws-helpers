@@ -41,7 +41,7 @@ jobs:
           git merge --ff-only "${{ github.event.pull_request.head.sha }}"
 
       - name: setup python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -93,9 +93,9 @@ jobs:
           git merge --ff-only "${{ github.event.pull_request.head.sha }}"
 
       - name: setup python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.8"
+          python-version-file: "pyproject.toml"
 
       - name: setup poetry
         uses: abatilo/actions-poetry@v2
@@ -210,9 +210,9 @@ jobs:
           git merge --ff-only "${{ github.event.pull_request.head.sha }}"
 
       - name: setup python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.8"
+          python-version-file: "pyproject.toml"
 
       - name: setup poetry
         uses: abatilo/actions-poetry@v2
@@ -295,9 +295,9 @@ jobs:
           git merge --ff-only "${{ github.event.pull_request.head.sha }}"
 
       - name: setup python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.8"
+          python-version-file: "pyproject.toml"
 
       - name: setup poetry
         uses: abatilo/actions-poetry@v2

@@ -648,6 +648,18 @@ async def test_get_all_models(store: MyModelStore):
     assert all(isinstance(model, AnotherModel) for model in models)
 
 
+async def test_get_all_models_with_a_limit(store: MyModelStore):
+
+    async with store.batch_writer() as writer:
+        for _i in range(100):
+            await writer.put_item(AnotherModel(uuid4().hex))
+
+    models = await store.get_all_models(AnotherModel, max_models=10)
+
+    assert len(models) == 10
+    assert all(isinstance(model, AnotherModel) for model in models)
+
+
 async def test_paginate_models(store: MyModelStore):
 
     partition_key = "BB#1"

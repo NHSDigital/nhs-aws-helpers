@@ -525,24 +525,30 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
             flush_amount=flush_amount,
         )
 
-    async def query_all_items(self, **kwargs) -> List[dict]:
+    async def query_all_items(self, max_items: int = 0, **kwargs) -> List[dict]:
         result = []
 
         async for items, _ in self.paginate_items("query", **kwargs):
             result.extend(items)
+            if 0 < max_items <= len(result):
+                return result[:max_items]
+
         return result
 
-    async def get_all_model_keys(self, model_type: Type[TBaseModel_co]) -> List[TModelKey]:
+    async def get_all_model_keys(self, model_type: Type[TBaseModel_co], max_keys: int = 0) -> List[TModelKey]:
         assert self._model_type_index_name
         assert self._model_type_index_pk
         results = await self.query_all_items(
             IndexName=self._model_type_index_name,
             KeyConditionExpression=Key(self._model_type_index_pk).eq(model_type.__name__),
+            max_items=max_keys,
         )
         return [model_type.model_key_from_item(res) for res in results]
 
-    async def get_all_models(self, model_type: Type[TBaseModel_co], max_concurrency=10) -> List[TBaseModel_co]:
-        model_keys = await self.get_all_model_keys(model_type=model_type)
+    async def get_all_models(
+        self, model_type: Type[TBaseModel_co], max_concurrency=10, max_models: int = 0
+    ) -> List[TBaseModel_co]:
+        model_keys = await self.get_all_model_keys(model_type=model_type, max_keys=max_models)
         return [
             cast(TBaseModel_co, record)
             for record in await self.batch_get_model(model_keys, max_concurrency=max_concurrency)

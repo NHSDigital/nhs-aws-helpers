@@ -62,22 +62,22 @@ class S3ObjectWriter(IO):
         self._close(failed)
         return not failed
 
-    def read(self, n: int = ...) -> AnyStr:
+    def read(self, n: int = ...) -> Union[str, bytes]:
         raise NotImplementedError
 
-    def readline(self, limit: int = ...) -> AnyStr:
+    def readline(self, limit: int = ...) -> Union[str, bytes]:
         raise NotImplementedError
 
-    def readlines(self, hint: int = ...) -> List[AnyStr]:
+    def readlines(self, hint: int = ...) -> List[Union[str, bytes]]:
         raise NotImplementedError
 
     def seek(self, offset: int, whence: int = ...) -> int:
         raise NotImplementedError
 
-    def __next__(self) -> AnyStr:
+    def __next__(self) -> Union[str, bytes]:
         raise NotImplementedError
 
-    def __iter__(self) -> Iterator[AnyStr]:
+    def __iter__(self) -> Iterator[Union[str, bytes]]:
         raise NotImplementedError
 
     @property

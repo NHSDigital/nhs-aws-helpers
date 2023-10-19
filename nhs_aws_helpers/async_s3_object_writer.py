@@ -1,6 +1,6 @@
 import asyncio
 from asyncio import Task
-from typing import Any, AnyStr, Final, Iterator, List, Mapping, Optional, Union
+from typing import Any, Final, Iterator, List, Mapping, Optional, Union
 
 from mypy_boto3_s3.service_resource import MultipartUpload, Object
 
@@ -89,25 +89,25 @@ class AsyncS3ObjectWriter:
     def writable() -> bool:
         return True
 
-    def read(self, num_bytes: int = ...) -> AnyStr:
+    def read(self, num_bytes: int = ...) -> Union[str, bytes]:
         raise NotImplementedError
 
-    def readline(self, limit: int = ...) -> AnyStr:
+    def readline(self, limit: int = ...) -> Union[str, bytes]:
         raise NotImplementedError
 
-    def readlines(self, hint: int = ...) -> List[AnyStr]:
+    def readlines(self, hint: int = ...) -> List[Union[str, bytes]]:
         raise NotImplementedError
 
     def seek(self, offset: int, whence: int = ...) -> int:
         raise NotImplementedError
 
-    def __next__(self) -> AnyStr:
+    def __next__(self) -> Union[str, bytes]:
         raise NotImplementedError
 
-    def __iter__(self) -> Iterator[AnyStr]:
+    def __iter__(self) -> Iterator[Union[str, bytes]]:
         raise NotImplementedError
 
-    async def writelines(self, lines: List[AnyStr]) -> None:
+    async def writelines(self, lines: List[Union[str, bytes]]) -> None:
         for arg in lines:
             await self.write(arg)
 

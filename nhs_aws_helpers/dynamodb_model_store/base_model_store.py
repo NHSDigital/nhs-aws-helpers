@@ -593,15 +593,18 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
         return results, unprocessed
 
     @dynamodb_retry_backoff()
-    async def _get_batch(self, keys: List[TModelKey]) -> Tuple[List[Dict[str, Any]], List[TModelKey]]:
+    async def _get_batch(self, keys: List[TModelKey], **kwargs) -> Tuple[List[Dict[str, Any]], List[TModelKey]]:
 
         if not keys:
             return [], []
 
-        response = await run_in_executor(self.service.batch_get_item, RequestItems={self._table_name: {"Keys": keys}})
+        request = kwargs or {}
+        request["Keys"] = keys
+
+        response = await run_in_executor(self.service.batch_get_item, RequestItems={self._table_name: request})
         return self._get_batch_results(response)
 
-    async def batch_get_item(self, keys: List[TModelKey], max_concurrency: int = 10) -> List[Dict[str, Any]]:
+    async def batch_get_item(self, keys: List[TModelKey], max_concurrency: int = 10, **kwargs) -> List[Dict[str, Any]]:
         def _chunk(it, size):
             it = iter(it)
             return iter(lambda: tuple(itertools.islice(it, size)), ())
@@ -612,7 +615,7 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
             batches = _chunk(remaining, 100)  # into batches of max size 100 (max allowed)
             to_retry = []
             async with asyncio.Semaphore(max_concurrency):
-                task_results = await asyncio.gather(*[self._get_batch(list(batch)) for batch in batches])
+                task_results = await asyncio.gather(*[self._get_batch(list(batch), **kwargs) for batch in batches])
 
             for found, unprocessed in task_results:
                 if found:

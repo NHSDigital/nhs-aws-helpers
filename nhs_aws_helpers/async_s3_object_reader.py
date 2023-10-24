@@ -78,7 +78,6 @@ class AsyncS3ObjectReader:
         raise NotImplementedError
 
     async def close(self):
-
         if self._closed:
             return
 
@@ -112,9 +111,7 @@ class AsyncS3ObjectReader:
         return bytes_read
 
     async def read(self, num: Optional[int] = None) -> Union[str, bytes]:
-
         if self._fully_read:
-
             end = self._bytes_read if num is None else max(min(self._position + num, self._bytes_read), 0)
 
             pos = min(max(self._position, 0), self._bytes_read)
@@ -142,7 +139,6 @@ class AsyncS3ObjectReader:
         end = max(0, self._position + num)
 
         if end > self._bytes_read:
-
             bytes_to_read = max(end - self._bytes_read, self._buffer_size)
 
             chunk = body.read(bytes_to_read)

@@ -45,21 +45,17 @@ def a_ddb_table() -> Generator[Table, None, None]:
 
 @pytest.fixture(name="cloned_table_defaults")
 def _on_demand_table(source_ddb_table: Table) -> Generator[Table, None, None]:
-
     yield from temp_dynamodb_table(source_ddb_table.table_name)
 
 
 @pytest.fixture(name="cloned_table_provisioned")
 def _provisioned_table(source_ddb_table: Table) -> Generator[Table, None, None]:
-
     yield from temp_dynamodb_table(source_ddb_table.table_name, on_demand_billing_mode=False, provisioned_capacity=99)
 
 
 def test_default_temp_table(cloned_table_defaults: Table):
-
     assert cloned_table_defaults.billing_mode_summary["BillingMode"] == "PAY_PER_REQUEST"
 
 
 def test_provisioned_temp_table(cloned_table_provisioned: Table):
-
     assert cloned_table_provisioned.provisioned_throughput == {"ReadCapacityUnits": 99, "WriteCapacityUnits": 99}

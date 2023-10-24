@@ -11,7 +11,6 @@ class serialised_property(property):
 
 
 class BaseModel(Generic[TModelKey]):
-
     _model_key_type: Type[TModelKey]
 
     @serialised_property
@@ -23,7 +22,6 @@ class BaseModel(Generic[TModelKey]):
 
     @classmethod
     def model_key_fields(cls) -> List[str]:
-
         model_key_fields = _MODEL_KEY_FIELDS.get(cls._model_key_type)
         if not model_key_fields:
             model_key_fields = list(cls._model_key_type.__annotations__.keys())
@@ -42,7 +40,6 @@ _MODEL_KEY_FIELDS: Dict[type, List[str]] = {}
 
 @lru_cache
 def model_properties_cache(model_type: Type[BaseModel]) -> List[Tuple[str, type, Mapping[str, Any]]]:
-
     model_fields: List[Tuple[str, type, Mapping[str, Any]]] = []
 
     if is_dataclass(model_type):

@@ -92,7 +92,6 @@ class S3ObjectReader(IO):
         return self._s3_obj.key
 
     def close(self):
-
         if self._closed:
             return
         if self._body:
@@ -120,7 +119,6 @@ class S3ObjectReader(IO):
         return bytes_read
 
     def read(self, num: Optional[int] = None) -> Union[str, bytes]:
-
         if self._fully_read:
             end = self._bytes_read if num is None else max(min(self._position + num, self._bytes_read), 0)
             pos = min(max(self._position, 0), self._bytes_read)
@@ -146,7 +144,6 @@ class S3ObjectReader(IO):
         end = max(0, self._position + num)
 
         if end > self._bytes_read:
-
             bytes_to_read = max(end - self._bytes_read, self._buffer_size)
 
             chunk = self.body.read(bytes_to_read)

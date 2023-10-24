@@ -112,17 +112,14 @@ def s3_reader_binary():
 
 
 def s3_writer(bucket: Bucket, key: str):
-
     return S3ObjectWriter(s3_object(bucket.name, key), encoding="utf-8")
 
 
 def s3_writer_binary(bucket: Bucket, key: str):
-
     return S3ObjectWriter(s3_object(bucket.name, key))
 
 
 def test_read_all():
-
     with s3_reader_text() as reader:
         body = reader.read()
 
@@ -149,9 +146,7 @@ def test_read_n() -> None:
 
 
 def test_read_negative() -> None:
-
     with s3_reader_text() as reader:
-
         first_chunk = reader.read(300)
 
         neg_chunk = reader.read(-33)
@@ -163,11 +158,9 @@ def test_read_negative() -> None:
 
 
 def test_read_negative_all() -> None:
-
     read_size = -57
 
     with s3_reader_text() as reader:
-
         _ = reader.read()
         chunks: List[str] = []
         chunk = reader.read(read_size)
@@ -179,9 +172,7 @@ def test_read_negative_all() -> None:
 
 
 def test_seek_back_and_forth() -> None:
-
     with non_ascii_s3_reader_text() as reader:
-
         pos = reader.seek(57)
 
         assert pos == 57
@@ -210,11 +201,9 @@ def test_seek_back_and_forth() -> None:
 
 
 def test_seek_relative() -> None:
-
     pos = 0
 
     with non_ascii_s3_reader_text() as reader:
-
         for i in range(7):
             pos = reader.seek(100, SEEK_CUR)
 
@@ -235,7 +224,6 @@ def test_seek_relative() -> None:
 
 
 def test_read_line() -> None:
-
     with s3_reader_text() as reader:
         line = reader.readline()
 
@@ -257,7 +245,6 @@ def test_read_line_on_binary_object():
 
 
 def test_read_lines() -> None:
-
     with s3_reader_text() as reader:
         line = reader.readline()
 
@@ -280,7 +267,6 @@ def test_iter() -> None:
 
 
 def test_write_binary(temp_s3_bucket) -> None:
-
     key = f"testkey/{uuid4().hex}"
     with s3_writer_binary(temp_s3_bucket, key) as writer:
         writer.write(_BINARY)
@@ -292,7 +278,6 @@ def test_write_binary(temp_s3_bucket) -> None:
 
 
 def test_write_binary_then_nothing(temp_s3_bucket) -> None:
-
     key = f"testkey/{uuid4().hex}"
     with s3_writer_binary(temp_s3_bucket, key) as writer:
         writer.write(_BINARY)
@@ -305,7 +290,6 @@ def test_write_binary_then_nothing(temp_s3_bucket) -> None:
 
 
 def test_write_string(temp_s3_bucket) -> None:
-
     key = f"testkey/{uuid4().hex}"
     with s3_writer(temp_s3_bucket, key) as writer:
         writer.writelines(_S3_TEXT_BODY)
@@ -317,7 +301,6 @@ def test_write_string(temp_s3_bucket) -> None:
 
 
 def test_write_lines_string(temp_s3_bucket) -> None:
-
     key = f"testkey/{uuid4().hex}"
     with s3_writer(temp_s3_bucket, key) as writer:
         writer.writelines(_TEXT)
@@ -329,7 +312,6 @@ def test_write_lines_string(temp_s3_bucket) -> None:
 
 
 def test_upload_large_multipart_file(temp_s3_bucket) -> None:
-
     bytes_to_write = 20 * MiB
     block = b"A" * (4 * MiB)
     key = f"testkey/{uuid4().hex}"

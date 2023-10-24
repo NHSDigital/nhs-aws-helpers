@@ -41,7 +41,6 @@ def test_transaction_cancellation_reasons(error, expected_reasons):
 
 
 def test_ddb_retries_all_fail():
-
     calls: List[Any] = []
 
     @dynamodb_retry_backoff(max_retries=2)
@@ -153,7 +152,6 @@ def test_s3_retries(
 
 # pylint: disable=too-many-locals
 def test_s3_upload_multipart_from_copy(temp_s3_bucket: Bucket):
-
     uuid = uuid4().hex
     num_parts = 3
     ten_mb = b"ABCDEFGHIJ" * MiB
@@ -174,7 +172,6 @@ def test_s3_upload_multipart_from_copy(temp_s3_bucket: Bucket):
 
 
 def test_s3_upload_multipart_from_copy_one_part_too_small(temp_s3_bucket: Bucket):
-
     uuid = uuid4().hex
     num_parts = 3
     ten_mb = b"ABCDEFGHIJ" * MiB
@@ -201,7 +198,6 @@ def test_s3_upload_multipart_from_copy_one_part_too_small(temp_s3_bucket: Bucket
 
 # pylint: disable=too-many-locals
 def test_s3_upload_multipart_from_copy_missing_part_data(temp_s3_bucket: Bucket):
-
     uuid = uuid4().hex
     num_parts = 3
     ten_mb = b"ABCDEFGHIJ" * MiB

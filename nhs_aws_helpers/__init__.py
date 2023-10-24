@@ -232,7 +232,6 @@ def register_retry_handler(
     on_error: Optional[Callable] = None,
     on_backoff: Optional[Callable[[int, RetryContext], Any]] = None,
 ):
-
     if not hasattr(client_or_resource.meta, "events"):
         # it's a resource, so get the client and work with that
         client_or_resource = cast(S3ServiceResource, client_or_resource).meta.client
@@ -271,7 +270,6 @@ def register_retry_handler(
     )
 
     def on_response_received(**kwargs):
-
         if on_error is not None and kwargs.get("exception") or kwargs.get("parsed_response", {}).get("Error"):
             assert on_error
             on_error(**kwargs)
@@ -283,7 +281,6 @@ def register_retry_handler(
 
 
 class CustomBackoff(BaseRetryBackoff):
-
     _BASE = 2
     _MAX_BACKOFF = 10
 
@@ -410,7 +407,6 @@ def s3_replace_tags(
     config: Optional[Config] = None,
     client: Optional[S3Client] = None,
 ):
-
     client = client or s3_resource(session=session, config=config).meta.client
 
     client.put_object_tagging(
@@ -636,7 +632,6 @@ def s3_list_delete_markers(
 
 
 def s3_put(bucket: Bucket, key: str, body: Union[bytes, str], encoding: str = "utf-8", **kwargs) -> Object:
-
     obj = bucket.Object(key)
     encoded = cast(bytes, body)
     if isinstance(body, str):
@@ -888,17 +883,14 @@ class DDBRetryBackoff:
     def __call__(self, func: FuncT) -> FuncT:
         @wraps(func)
         def _wrapper(*args, **kwargs):
-
             retries = 0
             while True:
-
                 try:
                     result = func(*args, **kwargs)
 
                     return result
 
                 except ClientError as err:  # noqa: PERF203
-
                     if not self._should_retry(err, retries):
                         raise
 
@@ -907,17 +899,14 @@ class DDBRetryBackoff:
 
         @wraps(func)
         async def _async_wrapper(*args, **kwargs):
-
             retries = 0
             while True:
-
                 try:
                     result = await func(*args, **kwargs)
 
                     return result
 
                 except ClientError as err:  # noqa: PERF203
-
                     if not self._should_retry(err, retries):
                         raise
 
@@ -988,7 +977,6 @@ def ddb_query_batch_get_items(
     deserializer = TypeDeserializer()
 
     for page in page_iterator:
-
         keys = [{key_field: rec[key_field]} for rec in page["Items"]]
         items = ddb_get_items(table_name, keys)
         for item in items:
@@ -1105,7 +1093,6 @@ def assumed_role_session(
 
     credentials = get_credentials()
     if not refreshable:
-
         boto_credentials = botocore.credentials.Credentials(
             access_key=credentials["access_key"],
             secret_key=credentials["secret_key"],

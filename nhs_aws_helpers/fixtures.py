@@ -19,7 +19,6 @@ from nhs_aws_helpers import (
 
 @pytest.fixture(scope="session")
 def session_temp_s3_bucket() -> Generator[Bucket, None, None]:
-
     resource = s3_resource()
 
     bucket_name = f"temp-{petname.generate()}"
@@ -34,7 +33,6 @@ def session_temp_s3_bucket() -> Generator[Bucket, None, None]:
 
 @pytest.fixture()
 def temp_s3_bucket(session_temp_s3_bucket: Bucket) -> Bucket:  # pylint: disable=redefined-outer-name
-
     bucket = session_temp_s3_bucket
 
     bucket.objects.all().delete()
@@ -44,7 +42,6 @@ def temp_s3_bucket(session_temp_s3_bucket: Bucket) -> Bucket:  # pylint: disable
 
 @pytest.fixture()
 def temp_event_bus() -> Generator[Tuple[Queue, str], None, None]:
-
     events = events_client()
     sqs = sqs_resource()
 
@@ -88,7 +85,6 @@ def temp_queue() -> Generator[Queue, None, None]:
 
 @pytest.fixture()
 def temp_fifo_queue() -> Generator[Queue, None, None]:
-
     sqs = sqs_resource()
 
     queue_name = f"local-{petname.Generate(words=2, separator='-')}.fifo"

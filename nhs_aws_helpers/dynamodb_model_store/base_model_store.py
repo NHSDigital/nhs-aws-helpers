@@ -74,14 +74,12 @@ class PagedItems(Generic[TPageItem]):
         return PagedItems(items=items, last_evaluated_key=other.last_evaluated_key)
 
     def __iadd__(self, other: "PagedItems") -> "PagedItems":
-
         self.items.extend(other.items)
         self.last_evaluated_key = other.last_evaluated_key
         return self
 
 
 class BaseModelStore(Generic[TBaseModel, TModelKey]):
-
     _base_model_type: Type[TBaseModel]
     _model_types: Dict[str, Type[TBaseModel]] = {}  # noqa: RUF012
 
@@ -183,7 +181,6 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
     def deserialise_model(
         cls, model_dict: Dict[str, Any], model_type: Type[TBaseModel_co], **kwargs
     ) -> Optional[TBaseModel_co]:
-
         if model_dict is None:
             return None
 
@@ -235,7 +232,6 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
     def _serialise_field(
         cls, model: Any, field_name: str, field_type: type, metadata: Mapping[str, Any], value: Any, **kwargs
     ) -> Any:
-
         if value is None:
             return None
 
@@ -258,7 +254,6 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
         result: Dict[str, Any] = {}
 
         for field_name, field_type, metadata in model_fields:
-
             value = getattr(model, field_name)
 
             value = cls._serialise_field(model, field_name, field_type, metadata, value, **kwargs)
@@ -291,14 +286,12 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
         return item, duration, aws_request_id, aws_retries
 
     async def get_item(self, key: TModelKey, **kwargs) -> Optional[Dict[str, Any]]:
-
         item, _, _, _ = await self.get_item_with_retry_info(key, **kwargs)
         return item
 
     async def get_model_with_retry_info(
         self, key: TModelKey, model_type: Type[TBaseModel_co], **kwargs
     ) -> Tuple[Optional[TBaseModel_co], float, str, int]:
-
         item, duration, aws_request_id, aws_retries = await self.get_item_with_retry_info(key, **kwargs)
 
         if not item:
@@ -312,7 +305,6 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
         )
 
     async def get_model(self, key: TModelKey, model_type: Type[TBaseModel_co], **kwargs) -> Optional[TBaseModel_co]:
-
         model, _, _, _ = await self.get_model_with_retry_info(key, model_type, **kwargs)
 
         return model
@@ -320,7 +312,6 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
     async def transact_get_model(
         self, key: TModelKey, model_type: Type[TBaseModel_co], **kwargs
     ) -> Optional[TBaseModel_co]:
-
         items = await self.transact_get_items(cast(List[TransactGetItemTypeDef], [{"Get": {"Key": key}}]))
 
         if not items or not items[0]:
@@ -332,7 +323,6 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
 
     @dynamodb_retry_backoff()
     async def transact_get_items(self, get_items: Sequence[TransactGetItemTypeDef]) -> List[Optional[dict]]:
-
         get_items = list(get_items)
         for get_item in get_items:
             get_item["Get"]["TableName"] = self._table_name
@@ -349,7 +339,6 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
         return tuple(key_or_item[field] for field in self._base_model_type.model_key_fields())
 
     async def transact_get_models(self, keys: Sequence[TModelKey], **kwargs) -> List[Optional[TBaseModel]]:
-
         keys = list(keys)
         key_indexes = {self._model_key_tuple(key): ix for ix, key in enumerate(keys)}
 
@@ -515,7 +504,6 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
         return response, duration, aws_request_id, aws_retries
 
     async def update_item(self, key: TModelKey, **kwargs) -> UpdateItemOutputTableTypeDef:
-
         response, _, _, _ = await self.update_item_with_retry_info(key, **kwargs)
         return response
 
@@ -561,7 +549,6 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
         model_type: Type[TBaseModel_co],
         **kwargs,
     ) -> AsyncGenerator[PagedItems[TBaseModel_co], None]:
-
         async for items, last_evaluated_key in self.paginate_items(paginator_type, **kwargs):
             yield PagedItems(
                 items=[cast(TBaseModel_co, self.deserialise_model(item, model_type, **kwargs)) for item in items],
@@ -594,7 +581,6 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
 
     @dynamodb_retry_backoff()
     async def _get_batch(self, keys: List[TModelKey], **kwargs) -> Tuple[List[Dict[str, Any]], List[TModelKey]]:
-
         if not keys:
             return [], []
 
@@ -630,7 +616,6 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
     async def batch_get_item_ordered(
         self, keys: Sequence[TModelKey], max_concurrency: int = 10
     ) -> List[Optional[dict]]:
-
         keys = list(keys)
         key_indexes: Dict[Tuple[str, ...], int] = {self._model_key_tuple(key): ix for ix, key in enumerate(keys)}
 
@@ -656,7 +641,6 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
     async def batch_get_model(
         self, keys: Sequence[TModelKey], max_concurrency: int = 10, **kwargs
     ) -> List[Optional[TBaseModel]]:
-
         ordered = await self.batch_get_item_ordered(keys, max_concurrency=max_concurrency)
 
         models: List[Optional[TBaseModel]] = [
@@ -675,7 +659,6 @@ class _AsyncBatchWriter:
     """
 
     def __init__(self, store: BaseModelStore, flush_amount=25):
-
         self._store = store
         self._table_name = store.table.table_name
         self._client = store.client

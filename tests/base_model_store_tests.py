@@ -3,7 +3,7 @@ import random
 import sys
 from dataclasses import dataclass, field
 from datetime import date, datetime
-from typing import Any, Dict, Generator, List, Mapping, Optional, Type, TypedDict, Union
+from typing import Any, Dict, Generator, List, Mapping, Optional, Type, TypedDict, Union, cast
 from uuid import uuid4
 
 import petname  # type: ignore[import]
@@ -596,6 +596,24 @@ async def test_batch_get_item(store: MyModelStore):
 
     assert len(got) == 20
     assert all(set(item.keys()) == {"last_modified"} for item in got)
+
+
+async def test_batch_get_item_ordered(store: MyModelStore):
+    models: List[MyBaseModel] = [MyDerivedModel(id=uuid4().hex) for _ in range(10)]
+    models.extend([AnotherModel(id=uuid4().hex) for _ in range(10)])
+    async with store.batch_writer() as writer:
+        for model in models:
+            await writer.put_item(model)
+
+    got = cast(
+        List[dict],
+        await store.batch_get_item_ordered(
+            [model.model_key() for model in models], ProjectionExpression="my_pk,my_sk,last_modified"
+        ),
+    )
+
+    assert len(got) == 20
+    assert all(set(item.keys()) == {"my_pk", "my_sk", "last_modified"} for item in got)
 
 
 async def test_unregistered_model(store: MyModelStore):

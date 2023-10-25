@@ -614,12 +614,12 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
         return result
 
     async def batch_get_item_ordered(
-        self, keys: Sequence[TModelKey], max_concurrency: int = 10
+        self, keys: Sequence[TModelKey], max_concurrency: int = 10, **kwargs
     ) -> List[Optional[dict]]:
         keys = list(keys)
         key_indexes: Dict[Tuple[str, ...], int] = {self._model_key_tuple(key): ix for ix, key in enumerate(keys)}
 
-        records = await self.batch_get_item(keys, max_concurrency=max_concurrency)
+        records = await self.batch_get_item(keys, max_concurrency=max_concurrency, **kwargs)
 
         results: List[Optional[dict]] = [None for _ in range(len(keys))]
 

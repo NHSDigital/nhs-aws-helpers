@@ -16,9 +16,19 @@ from nhs_aws_helpers import (
     sqs_resource,
 )
 
+__all__ = [
+    "temp_s3_bucket_session_fixture",
+    "temp_s3_bucket_fixture",
+    "temp_event_bus_fixture",
+    "temp_queue_fixture",
+    "temp_fifo_queue_fixture",
+    "clone_schema",
+    "temp_dynamodb_table",
+]
 
-@pytest.fixture(scope="session")
-def session_temp_s3_bucket() -> Generator[Bucket, None, None]:
+
+@pytest.fixture(scope="session", name="session_temp_s3_bucket")
+def temp_s3_bucket_session_fixture() -> Generator[Bucket, None, None]:
     resource = s3_resource()
 
     bucket_name = f"temp-{petname.generate()}"
@@ -31,8 +41,8 @@ def session_temp_s3_bucket() -> Generator[Bucket, None, None]:
     bucket.delete()
 
 
-@pytest.fixture()
-def temp_s3_bucket(session_temp_s3_bucket: Bucket) -> Bucket:  # pylint: disable=redefined-outer-name
+@pytest.fixture(name="temp_s3_bucket")
+def temp_s3_bucket_fixture(session_temp_s3_bucket: Bucket) -> Bucket:
     bucket = session_temp_s3_bucket
 
     bucket.objects.all().delete()
@@ -40,8 +50,8 @@ def temp_s3_bucket(session_temp_s3_bucket: Bucket) -> Bucket:  # pylint: disable
     return bucket
 
 
-@pytest.fixture()
-def temp_event_bus() -> Generator[Tuple[Queue, str], None, None]:
+@pytest.fixture(name="temp_event_bus")
+def temp_event_bus_fixture() -> Generator[Tuple[Queue, str], None, None]:
     events = events_client()
     sqs = sqs_resource()
 
@@ -71,8 +81,8 @@ def temp_event_bus() -> Generator[Tuple[Queue, str], None, None]:
     events.delete_event_bus(Name=bus_name)
 
 
-@pytest.fixture()
-def temp_queue() -> Generator[Queue, None, None]:
+@pytest.fixture(name="temp_queue")
+def temp_queue_fixture() -> Generator[Queue, None, None]:
     sqs = sqs_resource()
 
     queue_name = f"local-{petname.Generate(words=2, separator='-')}"
@@ -83,8 +93,8 @@ def temp_queue() -> Generator[Queue, None, None]:
     queue.delete()
 
 
-@pytest.fixture()
-def temp_fifo_queue() -> Generator[Queue, None, None]:
+@pytest.fixture(name="temp_fifo_queue")
+def temp_fifo_queue_fixture() -> Generator[Queue, None, None]:
     sqs = sqs_resource()
 
     queue_name = f"local-{petname.Generate(words=2, separator='-')}.fifo"

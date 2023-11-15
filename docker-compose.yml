@@ -4,7 +4,7 @@ services:
 
   localstack:
     container_name: localstack
-    image: "${LOCALSTACK_IMAGE:-localstack/localstack:2.1.0}"
+    image: "${LOCALSTACK_IMAGE:-localstack/localstack:latest}"
     restart: always
     environment:
       - SERVICES=ssm,secretsmanager,s3,dynamodb,logs,lambda,cloudwatch,iam,sqs,sns,sts,resourcegroupstaggingapi,monitoring,events,ec2,kms
@@ -12,6 +12,10 @@ services:
       - DEBUG=1
       - DYNAMODB_SHARE_DB=1
       - DOCKER_HOST=unix:///var/run/docker.sock
+      # temporary until these are fixed
+      # https://github.com/localstack/localstack/pull/9635
+      # https://github.com/localstack/localstack/issues/9637
+      - PROVIDER_OVERRIDE_S3=legacy_v2
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     tmpfs:

@@ -29,6 +29,11 @@ __all__ = [
 
 @pytest.fixture(scope="session", name="session_temp_s3_bucket")
 def temp_s3_bucket_session_fixture() -> Generator[Bucket, None, None]:
+    """
+        session temp_s3_bucket ... (use temp_s3_bucket)
+    Returns:
+        Bucket
+    """
     resource = s3_resource()
 
     bucket_name = f"temp-{petname.generate()}"
@@ -43,6 +48,12 @@ def temp_s3_bucket_session_fixture() -> Generator[Bucket, None, None]:
 
 @pytest.fixture(name="temp_s3_bucket")
 def temp_s3_bucket_fixture(session_temp_s3_bucket: Bucket) -> Bucket:
+    """
+        yields a temporary s3 bucket for use in unit tests
+
+    Returns:
+        Bucket: a temporary empty s3 bucket
+    """
     bucket = session_temp_s3_bucket
 
     bucket.objects.all().delete()
@@ -52,6 +63,11 @@ def temp_s3_bucket_fixture(session_temp_s3_bucket: Bucket) -> Bucket:
 
 @pytest.fixture(name="temp_event_bus")
 def temp_event_bus_fixture() -> Generator[Tuple[Queue, str], None, None]:
+    """
+        creates a temporary event bus and a Queue to listen to the event bus
+    Returns:
+        Tuple[Queue, str]: the listening queue and event bus name
+    """
     events = events_client()
     sqs = sqs_resource()
 
@@ -83,6 +99,11 @@ def temp_event_bus_fixture() -> Generator[Tuple[Queue, str], None, None]:
 
 @pytest.fixture(name="temp_queue")
 def temp_queue_fixture() -> Generator[Queue, None, None]:
+    """
+        yields a temporary SQS queue for testing
+    Returns:
+        Queue
+    """
     sqs = sqs_resource()
 
     queue_name = f"local-{petname.Generate(words=2, separator='-')}"
@@ -95,6 +116,11 @@ def temp_queue_fixture() -> Generator[Queue, None, None]:
 
 @pytest.fixture(name="temp_fifo_queue")
 def temp_fifo_queue_fixture() -> Generator[Queue, None, None]:
+    """
+        yields a temporary Fifo SQS queue for testing
+    Returns:
+        Queue
+    """
     sqs = sqs_resource()
 
     queue_name = f"local-{petname.Generate(words=2, separator='-')}.fifo"

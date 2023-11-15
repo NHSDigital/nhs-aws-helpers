@@ -135,10 +135,15 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
         return cls.deserialise_value(field.type, value, **kwargs)
 
     @classmethod
-    def deserialise_value(cls, value_type: type, value: Any, **kwargs) -> Any:
+    def deserialise_value(cls, value_type: type, value: Any, **kwargs) -> Any:  # noqa: C901
         value_type = optional_origin_type(value_type)
 
-        if value_type in (str, bytes, bool):
+        if value and value_type in (bytes, bytearray) and hasattr(value, "value"):
+            value = value.value
+            if value_type == bytearray:
+                value = bytearray(value)
+
+        if value_type in (str, bool, bytes, bytearray):
             return value
 
         if is_dataclass(value_type):

@@ -119,6 +119,8 @@ class MyDerivedModel(MyBaseModel):
     nested_items: List[NestedItem] = field(default_factory=list)
     nested_item: NestedItem = field(default_factory=lambda: NestedItem(event="created"))
     union_date: Union[datetime, None] = field(default_factory=datetime.utcnow)
+    bytes_type: Union[bytes, None] = None
+    bytearray_type: Union[bytearray, None] = None
 
     def get_key(self) -> _MyModelKey:
         return _MyModelKey(my_pk=f"AA#{self.id}", my_sk=self.sk_field or "#")
@@ -707,3 +709,23 @@ async def test_paged_items():
 
     new_items = has_size + has_size
     assert len(new_items.items) == 6
+
+
+async def test_bytes_serialisation(store: MyModelStore):
+    bytes_in = b"test"
+    model = MyDerivedModel(id=uuid4().hex, bytes_type=bytes_in)
+    await store.put_model(model)
+    stored = await store.get_model(model.model_key(), MyDerivedModel)
+    assert stored
+    assert isinstance(stored.bytes_type, bytes)
+    assert stored.bytes_type == bytes_in
+
+
+async def test_bytearray_serialisation(store: MyModelStore):
+    bytes_in = bytearray(b"test")
+    model = MyDerivedModel(id=uuid4().hex, bytearray_type=bytes_in)
+    await store.put_model(model)
+    stored = await store.get_model(model.model_key(), MyDerivedModel)
+    assert stored
+    assert isinstance(stored.bytearray_type, bytearray)
+    assert stored.bytearray_type == bytes_in

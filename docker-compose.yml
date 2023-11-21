@@ -12,10 +12,6 @@ services:
       - DEBUG=1
       - DYNAMODB_SHARE_DB=1
       - DOCKER_HOST=unix:///var/run/docker.sock
-      # temporary until these are fixed
-      # https://github.com/localstack/localstack/pull/9635
-      # https://github.com/localstack/localstack/issues/9637
-      - PROVIDER_OVERRIDE_S3=legacy_v2
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     tmpfs:

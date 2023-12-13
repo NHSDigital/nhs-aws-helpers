@@ -1,5 +1,6 @@
 import pytest  # type: ignore[import]
 
+# noinspection PyUnresolvedReferences
 from nhs_aws_helpers.fixtures import *  # noqa: F403
 from tests.utils import temp_env_vars
 

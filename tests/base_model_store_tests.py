@@ -3,7 +3,7 @@ import random
 import sys
 from dataclasses import dataclass, field
 from datetime import date, datetime
-from typing import Any, Dict, Generator, List, Mapping, Optional, Type, TypedDict, Union
+from typing import Any, Dict, Generator, List, Mapping, Optional, Type, TypedDict, Union, cast
 from uuid import uuid4
 
 import petname  # type: ignore[import]
@@ -119,6 +119,8 @@ class MyDerivedModel(MyBaseModel):
     nested_items: List[NestedItem] = field(default_factory=list)
     nested_item: NestedItem = field(default_factory=lambda: NestedItem(event="created"))
     union_date: Union[datetime, None] = field(default_factory=datetime.utcnow)
+    bytes_type: Union[bytes, None] = None
+    bytearray_type: Union[bytearray, None] = None
 
     def get_key(self) -> _MyModelKey:
         return _MyModelKey(my_pk=f"AA#{self.id}", my_sk=self.sk_field or "#")
@@ -585,6 +587,37 @@ async def test_batch_get_model(store: MyModelStore):
     assert all(isinstance(model, (MyDerivedModel, AnotherModel)) for model in got)
 
 
+async def test_batch_get_item(store: MyModelStore):
+    models: List[MyBaseModel] = [MyDerivedModel(id=uuid4().hex) for _ in range(10)]
+    models.extend([AnotherModel(id=uuid4().hex) for _ in range(10)])
+    async with store.batch_writer() as writer:
+        for model in models:
+            await writer.put_item(model)
+
+    got = await store.batch_get_item([model.model_key() for model in models], ProjectionExpression="last_modified")
+
+    assert len(got) == 20
+    assert all(set(item.keys()) == {"last_modified"} for item in got)
+
+
+async def test_batch_get_item_ordered(store: MyModelStore):
+    models: List[MyBaseModel] = [MyDerivedModel(id=uuid4().hex) for _ in range(10)]
+    models.extend([AnotherModel(id=uuid4().hex) for _ in range(10)])
+    async with store.batch_writer() as writer:
+        for model in models:
+            await writer.put_item(model)
+
+    got = cast(
+        List[dict],
+        await store.batch_get_item_ordered(
+            [model.model_key() for model in models], ProjectionExpression="my_pk,my_sk,last_modified"
+        ),
+    )
+
+    assert len(got) == 20
+    assert all(set(item.keys()) == {"my_pk", "my_sk", "last_modified"} for item in got)
+
+
 async def test_unregistered_model(store: MyModelStore):
     models: List[MyBaseModel] = [UnregisteredModel(id=uuid4().hex) for _ in range(10)]
     async with store.batch_writer() as writer:
@@ -619,6 +652,17 @@ async def test_get_all_models(store: MyModelStore):
     models = await store.get_all_models(AnotherModel)
 
     assert len(models) == 100
+    assert all(isinstance(model, AnotherModel) for model in models)
+
+
+async def test_get_all_models_with_a_limit(store: MyModelStore):
+    async with store.batch_writer() as writer:
+        for _i in range(100):
+            await writer.put_item(AnotherModel(uuid4().hex))
+
+    models = await store.get_all_models(AnotherModel, max_models=10)
+
+    assert len(models) == 10
     assert all(isinstance(model, AnotherModel) for model in models)
 
 
@@ -686,3 +730,23 @@ async def test_paged_items():
 
     new_items = has_size + has_size
     assert len(new_items.items) == 6
+
+
+async def test_bytes_serialisation(store: MyModelStore):
+    bytes_in = b"test"
+    model = MyDerivedModel(id=uuid4().hex, bytes_type=bytes_in)
+    await store.put_model(model)
+    stored = await store.get_model(model.model_key(), MyDerivedModel)
+    assert stored
+    assert isinstance(stored.bytes_type, bytes)
+    assert stored.bytes_type == bytes_in
+
+
+async def test_bytearray_serialisation(store: MyModelStore):
+    bytes_in = bytearray(b"test")
+    model = MyDerivedModel(id=uuid4().hex, bytearray_type=bytes_in)
+    await store.put_model(model)
+    stored = await store.get_model(model.model_key(), MyDerivedModel)
+    assert stored
+    assert isinstance(stored.bytearray_type, bytearray)
+    assert stored.bytearray_type == bytes_in

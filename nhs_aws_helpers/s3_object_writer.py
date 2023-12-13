@@ -33,7 +33,6 @@ class S3ObjectWriter(IO):
         create_object_args: Optional[Mapping[str, Any]] = None,
         max_multipart_concurrency: int = 12,
     ) -> None:
-
         buffer_size = max(buffer_size, self.MIN_PART_SIZE)
         self._s3_obj = s3_obj
         self._closed = False
@@ -62,22 +61,22 @@ class S3ObjectWriter(IO):
         self._close(failed)
         return not failed
 
-    def read(self, n: int = ...) -> AnyStr:
+    def read(self, n: int = ...) -> Union[str, bytes]:
         raise NotImplementedError
 
-    def readline(self, limit: int = ...) -> AnyStr:
+    def readline(self, limit: int = ...) -> Union[str, bytes]:
         raise NotImplementedError
 
-    def readlines(self, hint: int = ...) -> List[AnyStr]:
+    def readlines(self, hint: int = ...) -> List[Union[str, bytes]]:
         raise NotImplementedError
 
     def seek(self, offset: int, whence: int = ...) -> int:
         raise NotImplementedError
 
-    def __next__(self) -> AnyStr:
+    def __next__(self) -> Union[str, bytes]:
         raise NotImplementedError
 
-    def __iter__(self) -> Iterator[AnyStr]:
+    def __iter__(self) -> Iterator[Union[str, bytes]]:
         raise NotImplementedError
 
     @property
@@ -137,20 +136,17 @@ class S3ObjectWriter(IO):
         self._position += len(encoded)
 
         while self.tell() >= self._buffer_size:
-
             self._start_next_part_upload()
 
         return len(encoded)
 
     def _raise_if_errored(self):
-
         if len(self._upload_errors) < 1:
             return
 
         raise RuntimeError from self._upload_errors[0]
 
     def _start_next_part_upload(self):
-
         self._raise_if_errored()
 
         if self._multipart_upload is None:
@@ -183,7 +179,6 @@ class S3ObjectWriter(IO):
         return data.encode(self._encoding)
 
     def _maybe_write(self):
-
         if not self._multipart_upload:
             if not self.tell():
                 return
@@ -221,7 +216,6 @@ class S3ObjectWriter(IO):
         self._close()
 
     def _close(self, failed: bool = False):
-
         if self._closed:
             return
 

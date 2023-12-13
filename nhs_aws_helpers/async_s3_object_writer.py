@@ -1,6 +1,6 @@
 import asyncio
 from asyncio import Task
-from typing import Any, AnyStr, Final, Iterator, List, Mapping, Optional, Union
+from typing import Any, Final, Iterator, List, Mapping, Optional, Union
 
 from mypy_boto3_s3.service_resource import MultipartUpload, Object
 
@@ -89,25 +89,25 @@ class AsyncS3ObjectWriter:
     def writable() -> bool:
         return True
 
-    def read(self, num_bytes: int = ...) -> AnyStr:
+    def read(self, num_bytes: int = ...) -> Union[str, bytes]:
         raise NotImplementedError
 
-    def readline(self, limit: int = ...) -> AnyStr:
+    def readline(self, limit: int = ...) -> Union[str, bytes]:
         raise NotImplementedError
 
-    def readlines(self, hint: int = ...) -> List[AnyStr]:
+    def readlines(self, hint: int = ...) -> List[Union[str, bytes]]:
         raise NotImplementedError
 
     def seek(self, offset: int, whence: int = ...) -> int:
         raise NotImplementedError
 
-    def __next__(self) -> AnyStr:
+    def __next__(self) -> Union[str, bytes]:
         raise NotImplementedError
 
-    def __iter__(self) -> Iterator[AnyStr]:
+    def __iter__(self) -> Iterator[Union[str, bytes]]:
         raise NotImplementedError
 
-    async def writelines(self, lines: List[AnyStr]) -> None:
+    async def writelines(self, lines: List[Union[str, bytes]]) -> None:
         for arg in lines:
             await self.write(arg)
 
@@ -129,14 +129,12 @@ class AsyncS3ObjectWriter:
         return len(data)
 
     def _raise_if_errored(self):
-
         if len(self._upload_errors) < 1:
             return
 
         raise RuntimeError from self._upload_errors[0]
 
     async def _start_next_part_upload(self):
-
         self._raise_if_errored()
 
         if self._multipart_upload is None:
@@ -167,7 +165,6 @@ class AsyncS3ObjectWriter:
         return data.encode(self._encoding)
 
     async def _maybe_write(self):
-
         if not self._multipart_upload:
             if not self.tell():
                 return
@@ -181,7 +178,6 @@ class AsyncS3ObjectWriter:
             return
 
         if self.tell():
-
             await self._start_next_part_upload()
 
         if self._upload_tasks:
@@ -204,7 +200,6 @@ class AsyncS3ObjectWriter:
         assert result
 
     async def abort(self):
-
         if self._multipart_upload:
             await run_in_executor(self._multipart_upload.abort)
             for task in self._upload_tasks:
@@ -217,7 +212,6 @@ class AsyncS3ObjectWriter:
         await self._close()
 
     async def _close(self, failed: bool = False):
-
         if self._closed:
             return
 

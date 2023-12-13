@@ -135,10 +135,15 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
         return cls.deserialise_value(field.type, value, **kwargs)
 
     @classmethod
-    def deserialise_value(cls, value_type: type, value: Any, **kwargs) -> Any:
+    def deserialise_value(cls, value_type: type, value: Any, **kwargs) -> Any:  # noqa: C901
         value_type = optional_origin_type(value_type)
 
-        if value_type in (str, bytes, bool):
+        if value and value_type in (bytes, bytearray) and hasattr(value, "value"):
+            value = value.value
+            if value_type == bytearray:
+                value = bytearray(value)
+
+        if value_type in (str, bool, bytes, bytearray):
             return value
 
         if is_dataclass(value_type):
@@ -513,24 +518,30 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
             flush_amount=flush_amount,
         )
 
-    async def query_all_items(self, **kwargs) -> List[dict]:
+    async def query_all_items(self, max_items: int = 0, **kwargs) -> List[dict]:
         result = []
 
         async for items, _ in self.paginate_items("query", **kwargs):
             result.extend(items)
+            if 0 < max_items <= len(result):
+                return result[:max_items]
+
         return result
 
-    async def get_all_model_keys(self, model_type: Type[TBaseModel_co]) -> List[TModelKey]:
+    async def get_all_model_keys(self, model_type: Type[TBaseModel_co], max_keys: int = 0) -> List[TModelKey]:
         assert self._model_type_index_name
         assert self._model_type_index_pk
         results = await self.query_all_items(
             IndexName=self._model_type_index_name,
             KeyConditionExpression=Key(self._model_type_index_pk).eq(model_type.__name__),
+            max_items=max_keys,
         )
         return [model_type.model_key_from_item(res) for res in results]
 
-    async def get_all_models(self, model_type: Type[TBaseModel_co], max_concurrency=10) -> List[TBaseModel_co]:
-        model_keys = await self.get_all_model_keys(model_type=model_type)
+    async def get_all_models(
+        self, model_type: Type[TBaseModel_co], max_concurrency=10, max_models: int = 0
+    ) -> List[TBaseModel_co]:
+        model_keys = await self.get_all_model_keys(model_type=model_type, max_keys=max_models)
         return [
             cast(TBaseModel_co, record)
             for record in await self.batch_get_model(model_keys, max_concurrency=max_concurrency)
@@ -589,14 +600,17 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
         return results, unprocessed
 
     @dynamodb_retry_backoff()
-    async def _get_batch(self, keys: List[TModelKey]) -> Tuple[List[Dict[str, Any]], List[TModelKey]]:
+    async def _get_batch(self, keys: List[TModelKey], **kwargs) -> Tuple[List[Dict[str, Any]], List[TModelKey]]:
         if not keys:
             return [], []
 
-        response = await run_in_executor(self.service.batch_get_item, RequestItems={self._table_name: {"Keys": keys}})
+        request = kwargs or {}
+        request["Keys"] = keys
+
+        response = await run_in_executor(self.service.batch_get_item, RequestItems={self._table_name: request})
         return self._get_batch_results(response)
 
-    async def batch_get_item(self, keys: List[TModelKey], max_concurrency: int = 10) -> List[Dict[str, Any]]:
+    async def batch_get_item(self, keys: List[TModelKey], max_concurrency: int = 10, **kwargs) -> List[Dict[str, Any]]:
         def _chunk(it, size):
             it = iter(it)
             return iter(lambda: tuple(itertools.islice(it, size)), ())
@@ -607,7 +621,7 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
             batches = _chunk(remaining, 100)  # into batches of max size 100 (max allowed)
             to_retry = []
             async with asyncio.Semaphore(max_concurrency):
-                task_results = await asyncio.gather(*[self._get_batch(list(batch)) for batch in batches])
+                task_results = await asyncio.gather(*[self._get_batch(list(batch), **kwargs) for batch in batches])
 
             for found, unprocessed in task_results:
                 if found:
@@ -620,12 +634,12 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
         return result
 
     async def batch_get_item_ordered(
-        self, keys: Sequence[TModelKey], max_concurrency: int = 10
+        self, keys: Sequence[TModelKey], max_concurrency: int = 10, **kwargs
     ) -> List[Optional[dict]]:
         keys = list(keys)
         key_indexes: Dict[Tuple[str, ...], int] = {self._model_key_tuple(key): ix for ix, key in enumerate(keys)}
 
-        records = await self.batch_get_item(keys, max_concurrency=max_concurrency)
+        records = await self.batch_get_item(keys, max_concurrency=max_concurrency, **kwargs)
 
         results: List[Optional[dict]] = [None for _ in range(len(keys))]
 

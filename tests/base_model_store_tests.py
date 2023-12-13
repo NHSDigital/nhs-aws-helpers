@@ -31,7 +31,6 @@ class _MyModelKey(TypedDict):
 def test_create_py_310_model():
     @dataclass(kw_only=True)  # type: ignore[call-overload]
     class MyBaseModelPy310(BaseModel[_MyModelKey]):
-
         _model_key_type = _MyModelKey
         base_required_thing: str
         optional_thing: Optional[str] = None
@@ -43,7 +42,6 @@ def test_create_py_310_model():
 
     @dataclass
     class SomeDerivedModelPy310(MyBaseModelPy310):
-
         _index_model_type = False
         required_thing: str  # type: ignore[misc]
         another_optional_thing: Optional[bool] = field(default=None)
@@ -185,7 +183,6 @@ class ASpecialDerivedModel(MyBaseModel):
 
 
 def test_create_model():
-
     model = MyDerivedModel(id="TEST2")
     assert model.last_modified
     assert model.sk_field == "#"
@@ -197,7 +194,6 @@ def test_create_model():
 
 
 class MyModelStore(BaseModelStore[MyBaseModel, _MyModelKey]):
-
     _base_model_type = MyBaseModel
     _model_types = {cls.__name__: cls for cls in [MyDerivedModel, AnotherModel, ASpecialDerivedModel]}  # noqa: RUF012
 
@@ -209,7 +205,6 @@ class MyModelStore(BaseModelStore[MyBaseModel, _MyModelKey]):
     def _before_deserialise_model(
         cls, model_dict: Dict[str, Any], model_type: Type[MyBaseModel], **kwargs
     ) -> Dict[str, Any]:
-
         if not model_dict:
             return model_dict
 
@@ -223,7 +218,6 @@ class MyModelStore(BaseModelStore[MyBaseModel, _MyModelKey]):
     def _serialise_field(
         cls, model: Any, field_name: str, field_type: type, metadata: Mapping[str, Any], value: Any, **kwargs
     ) -> Any:
-
         if value is None:
             return None
 
@@ -288,7 +282,6 @@ def create_temp_ddb_table(session_temp_ddb_table: Table) -> Table:
 
 @pytest.fixture(name="store")
 def create_temp_store(temp_table: Table):
-
     return MyModelStore(temp_table.name)
 
 
@@ -314,7 +307,6 @@ async def test_store_put_get_item(store: MyModelStore):
 
 
 async def test_store_put_get_model(store: MyModelStore):
-
     expected = MyDerivedModel(id=uuid4().hex)
 
     await store.put_model(expected)
@@ -326,7 +318,6 @@ async def test_store_put_get_model(store: MyModelStore):
 
 
 async def test_store_put_update_get_model(store: MyModelStore):
-
     expected = MyDerivedModel(id=uuid4().hex)
 
     await store.put_model(expected)
@@ -346,7 +337,6 @@ async def test_store_put_update_get_model(store: MyModelStore):
 
 
 async def test_store_put_exists_delete_exists(store: MyModelStore):
-
     expected = MyDerivedModel(id=uuid4().hex)
 
     await store.put_model(expected)
@@ -369,7 +359,6 @@ async def test_store_put_exists_delete_exists(store: MyModelStore):
 
 
 async def test_store_put_model_if_not_exists(store: MyModelStore):
-
     original = MyDerivedModel(id=uuid4().hex, optional_thing=uuid4().hex)
 
     was_put = await store.put_model_if_not_exists(original)
@@ -386,7 +375,6 @@ async def test_store_put_model_if_not_exists(store: MyModelStore):
 
 
 async def test_store_put_item_if_not_exists(store: MyModelStore):
-
     original = {"my_pk": uuid4().hex, "my_sk": "A", "field": uuid4().hex}
 
     was_put = await store.put_item_if_not_exists(original)
@@ -403,7 +391,6 @@ async def test_store_put_item_if_not_exists(store: MyModelStore):
 
 
 async def test_inject_custom_serialization(store: MyModelStore):
-
     put_model = ASpecialDerivedModel(id=uuid4().hex, special_field=NotSerializable(uuid4().hex))
 
     await store.put_model(put_model)
@@ -420,7 +407,6 @@ async def test_inject_custom_serialization(store: MyModelStore):
 
 
 async def test_query_and_unpack_paged_items(store: MyModelStore):
-
     partition_key = "PK#1"
 
     async with store.batch_writer() as writer:
@@ -434,7 +420,6 @@ async def test_query_and_unpack_paged_items(store: MyModelStore):
 
 
 async def test_query_and_unpack_paged_items_with_limit(store: MyModelStore):
-
     partition_key = "PK#1"
 
     async with store.batch_writer() as writer:
@@ -448,7 +433,6 @@ async def test_query_and_unpack_paged_items_with_limit(store: MyModelStore):
 
 
 async def test_query_paginate_items(store: MyModelStore):
-
     partition_key = "PK#1"
 
     async with store.batch_writer() as writer:
@@ -470,13 +454,11 @@ async def test_query_paginate_items(store: MyModelStore):
 
 
 async def test_try_deserialise_non_model(store: MyModelStore):
-
     with pytest.raises(TypeError):
         store.deserialise_model({"aa": 123}, NotSerializable)  # type: ignore[type-var]
 
 
 async def test_serialize_deserialize_model(store: MyModelStore):
-
     model = MyDerivedModel(id=uuid4().hex, nested_items=[NestedItem(event="bob"), NestedItem(event="fin")])
     serialized = store.serialise_model(model)
 
@@ -524,7 +506,6 @@ async def test_serialize_deserialize_model(store: MyModelStore):
 
 
 async def test_transact_get_put_model(store: MyModelStore):
-
     model = MyDerivedModel(id=uuid4().hex)
     await store.transact_write(actions=[{"Put": model}])
 
@@ -537,7 +518,6 @@ async def test_transact_get_put_model(store: MyModelStore):
 
 
 async def test_transact_get_models(store: MyModelStore):
-
     models = [
         MyDerivedModel(id=uuid4().hex),
         ASpecialDerivedModel(id=uuid4().hex, special_field=NotSerializable(uuid4().hex)),
@@ -562,7 +542,6 @@ async def test_transact_get_models(store: MyModelStore):
 
 
 async def test_query_all_items(store: MyModelStore):
-
     partition_key = "PK:1"
 
     async with store.batch_writer() as writer:
@@ -578,7 +557,6 @@ async def test_query_all_items(store: MyModelStore):
 
 
 async def test_query_all_models(store: MyModelStore):
-
     async with store.batch_writer() as writer:
         for i in range(20):
             await writer.put_item(MyDerivedModel(id="1", sk_field=f"SK:{i}"))
@@ -595,7 +573,6 @@ async def test_query_all_models(store: MyModelStore):
 
 
 async def test_batch_get_model(store: MyModelStore):
-
     models: List[MyBaseModel] = [MyDerivedModel(id=uuid4().hex) for _ in range(10)]
     models.extend([AnotherModel(id=uuid4().hex) for _ in range(10)])
     async with store.batch_writer() as writer:
@@ -609,7 +586,6 @@ async def test_batch_get_model(store: MyModelStore):
 
 
 async def test_unregistered_model(store: MyModelStore):
-
     models: List[MyBaseModel] = [UnregisteredModel(id=uuid4().hex) for _ in range(10)]
     async with store.batch_writer() as writer:
         for model in models:
@@ -620,7 +596,6 @@ async def test_unregistered_model(store: MyModelStore):
 
 
 async def test_query_count(store: MyModelStore):
-
     partition_key = "PK:1"
 
     async with store.batch_writer() as writer:
@@ -637,7 +612,6 @@ async def test_query_count(store: MyModelStore):
 
 
 async def test_get_all_models(store: MyModelStore):
-
     async with store.batch_writer() as writer:
         for _i in range(100):
             await writer.put_item(AnotherModel(uuid4().hex))
@@ -649,7 +623,6 @@ async def test_get_all_models(store: MyModelStore):
 
 
 async def test_paginate_models(store: MyModelStore):
-
     partition_key = "BB#1"
 
     async with store.batch_writer() as writer:
@@ -666,8 +639,28 @@ async def test_paginate_models(store: MyModelStore):
     assert len(pages) == 3
 
 
-async def test_paged_items():
+async def test_paginate_models_from_index(store: MyModelStore):
+    async with store.batch_writer() as writer:
+        for i in range(100):
+            await writer.put_item(AnotherModel(id="1", sk_field=f"SK:{i}"))
 
+    pages = [
+        page
+        async for page in store.paginate_models_from_index(
+            paginator_type="query",
+            model_type=AnotherModel,
+            index_name="gsi_model_type",
+            KeyConditionExpression=Key("model_type").eq(AnotherModel.__name__),
+            Limit=40,
+        )
+    ]
+
+    assert len(pages) == 3
+    for page in pages:
+        assert all(isinstance(model, AnotherModel) for model in page.items)
+
+
+async def test_paged_items():
     has_size = PagedItems(items=[1, 2, 3], last_evaluated_key={"my_pk": 123})
     assert has_size
     assert len(has_size) == 3

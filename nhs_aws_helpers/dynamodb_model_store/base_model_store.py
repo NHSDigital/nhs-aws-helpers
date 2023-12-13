@@ -560,6 +560,21 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
                 last_evaluated_key=last_evaluated_key,
             )
 
+    async def paginate_models_from_index(
+        self,
+        paginator_type: Literal["query", "scan", "list_backups", "list_tables"],
+        model_type: Type[TBaseModel_co],
+        index_name: str,
+        **kwargs,
+    ) -> AsyncGenerator[PagedItems[TBaseModel_co], None]:
+        async for items, last_evaluated_key in self.paginate_items(paginator_type, IndexName=index_name, **kwargs):
+            model_keys = [model_type.model_key_from_item(item) for item in items]
+            models = await self.batch_get_model(model_keys)
+            yield PagedItems(
+                [cast(TBaseModel_co, model) for model in models],
+                last_evaluated_key=last_evaluated_key,
+            )
+
     async def query_models(self, model_type: Type[TBaseModel_co], **kwargs) -> PagedItems[TBaseModel_co]:
         items, last_evaluated_key = await self.query_items(**kwargs)
         return PagedItems(

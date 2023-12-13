@@ -683,6 +683,27 @@ async def test_paginate_models(store: MyModelStore):
     assert len(pages) == 3
 
 
+async def test_paginate_models_from_index(store: MyModelStore):
+    async with store.batch_writer() as writer:
+        for i in range(100):
+            await writer.put_item(AnotherModel(id="1", sk_field=f"SK:{i}"))
+
+    pages = [
+        page
+        async for page in store.paginate_models_from_index(
+            paginator_type="query",
+            model_type=AnotherModel,
+            index_name="gsi_model_type",
+            KeyConditionExpression=Key("model_type").eq(AnotherModel.__name__),
+            Limit=40,
+        )
+    ]
+
+    assert len(pages) == 3
+    for page in pages:
+        assert all(isinstance(model, AnotherModel) for model in page.items)
+
+
 async def test_paged_items():
     has_size = PagedItems(items=[1, 2, 3], last_evaluated_key={"my_pk": 123})
     assert has_size

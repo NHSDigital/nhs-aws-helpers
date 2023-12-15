@@ -9,6 +9,7 @@ packages = [
     { include = "tests", format = "sdist" },
 ]
 readme = "README.md"
+repository = "https://github.com/NHSDigital/nhs-aws-helpers"
 
 [tool.poetry.dependencies]
 # core dependencies

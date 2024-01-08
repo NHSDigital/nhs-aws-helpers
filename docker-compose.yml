@@ -3,7 +3,7 @@ version: '3.9'
 services:
 
   localstack:
-    container_name: localstack
+    container_name: nhsaws_localstack
     image: "${LOCALSTACK_IMAGE:-localstack/localstack:latest}"
     restart: always
     environment:

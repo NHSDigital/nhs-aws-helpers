@@ -1041,7 +1041,11 @@ def s3_gunzip(
 
 
 def assumed_credentials(
-    account_id: str, role: str, role_session_name: Optional[str] = None, duration_seconds: int = 1200
+    account_id: str, 
+    role: str, 
+    role_session_name: Optional[str] = None, 
+    duration_seconds: int = 1200,
+    sts_endpoint_url: Optional[str] = None,
 ):
     """
     Refreshes the IAM credentials provided to us by STS for the duration of our session. This
@@ -1052,11 +1056,11 @@ def assumed_credentials(
          dict -> A dictionary containing our new set of credentials from STS as well as the
          expiration timestamp for the session.
     """
-    region = "eu-west-2"
-
+    region = os.environ.get("AWS_REGION", "eu-west-2")
+    endpoint_url = sts_endpoint_url or f"https://sts.{region}.amazonaws.com"
     role_session_name = role_session_name or f"assumed-{uuid4().hex}"
 
-    sts_client = boto3.client("sts", region_name=region, endpoint_url=f"https://sts.{region}.amazonaws.com")
+    sts_client = boto3.client("sts", region_name=region, endpoint_url=endpoint_url)
 
     params = {
         "RoleArn": f"arn:aws:iam::{account_id}:role/{role}",
@@ -1081,6 +1085,7 @@ def assumed_role_session(
     role_session_name: Optional[str] = None,
     duration_seconds: int = 1200,
     refreshable: bool = False,
+    sts_endpoint_url: Optional[str] = None,
 ) -> Session:
     """
     gets assumed role session for given account id and role name
@@ -1088,7 +1093,7 @@ def assumed_role_session(
     """
 
     get_credentials = partial(
-        assumed_credentials, account_id, role, role_session_name=role_session_name, duration_seconds=duration_seconds
+        assumed_credentials, account_id, role, role_session_name=role_session_name, duration_seconds=duration_seconds, sts_endpoint_url=sts_endpoint_url
     )
 
     credentials = get_credentials()

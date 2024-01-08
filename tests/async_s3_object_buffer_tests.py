@@ -196,7 +196,7 @@ async def test_seek_back_and_forth() -> None:
         pos = await reader.seek(new_pos)
         assert new_pos == pos
         assert new_pos == reader._position
-        assert 2 * _DEFAULT_BUFFER_SIZE >= reader._bytes_read
+        assert reader._bytes_read <= 2 * _DEFAULT_BUFFER_SIZE
 
         pos = await reader.seek(_NON_ASCII_TEXT_BODY_LEN_ENCODED + 1)
 

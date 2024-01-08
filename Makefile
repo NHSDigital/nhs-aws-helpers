@@ -70,7 +70,7 @@ lint: ruff mypy shellcheck
 
 up:
 	docker compose up -d --remove-orphans
-	scripts/wait-for-container.sh localstack
+	scripts/wait-for-container.sh nhsaws_localstack
 
 down:
 	poetry run docker compose down --remove-orphans || true

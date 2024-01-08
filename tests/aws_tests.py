@@ -11,6 +11,9 @@ from pytest_httpserver import HTTPServer
 
 from nhs_aws_helpers import (
     dynamodb_retry_backoff,
+    post_create_client,
+    register_config_default,
+    register_retry_handler,
     s3_client,
     s3_list_folders,
     s3_resource,
@@ -128,6 +131,14 @@ def test_s3_retries(
             "total_max_attempts": int(os.environ.get("BOTO_RETRIES_TOTAL_MAX_ATTEMPTS", "2")),
         },
     )
+
+    def _post_create_aws(boto_module: str, _: str, client):
+        if boto_module != "s3":
+            return
+        register_retry_handler(client)
+
+    register_config_default("s3", config)
+    post_create_client(_post_create_aws)
 
     with pytest.raises(ClientError) as ex, temp_env_vars(  # noqa: PT012
         # Point any new boto resources or clients at our fake endpoint

@@ -251,7 +251,7 @@ def register_retry_handler(
             retry_backoff=CustomBackoff(on_backoff=on_backoff),
         ),
         retry_event_adapter=RetryEventAdapter(),
-        retry_quota=retry_quota,
+        retry_quota=retry_quota,  # type: ignore[arg-type]
     )
 
     unique_id = f"retry-config-{service_event_name}"

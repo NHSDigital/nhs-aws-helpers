@@ -1045,7 +1045,7 @@ def assumed_credentials(
     role: str,
     role_session_name: Optional[str] = None,
     duration_seconds: int = 1200,
-    sts_endpoint_url: Optional[str] = None,
+    vpc_endpoint: Optional[str] = None,
 ):
     """
     Refreshes the IAM credentials provided to us by STS for the duration of our session. This
@@ -1057,7 +1057,11 @@ def assumed_credentials(
          expiration timestamp for the session.
     """
     region = os.environ.get("AWS_REGION", "eu-west-2")
-    endpoint_url = sts_endpoint_url or f"https://sts.{region}.amazonaws.com"
+    if vpc_endpoint:
+        endpoint_url = f"https://vpce.{vpc_endpoint}.sts.{region}.amazonaws.com"
+    else:
+        endpoint_url = f"https://sts.{region}.amazonaws.com"
+
     role_session_name = role_session_name or f"assumed-{uuid4().hex}"
 
     sts_client = boto3.client("sts", region_name=region, endpoint_url=endpoint_url)
@@ -1085,7 +1089,7 @@ def assumed_role_session(
     role_session_name: Optional[str] = None,
     duration_seconds: int = 1200,
     refreshable: bool = False,
-    sts_endpoint_url: Optional[str] = None,
+    vpc_endpoint: Optional[str] = None,
 ) -> Session:
     """
     gets assumed role session for given account id and role name
@@ -1098,7 +1102,7 @@ def assumed_role_session(
         role,
         role_session_name=role_session_name,
         duration_seconds=duration_seconds,
-        sts_endpoint_url=sts_endpoint_url,
+        vpc_endpoint=vpc_endpoint,
     )
 
     credentials = get_credentials()

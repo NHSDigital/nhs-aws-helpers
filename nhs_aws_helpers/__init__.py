@@ -1041,9 +1041,9 @@ def s3_gunzip(
 
 
 def assumed_credentials(
-    account_id: str, 
-    role: str, 
-    role_session_name: Optional[str] = None, 
+    account_id: str,
+    role: str,
+    role_session_name: Optional[str] = None,
     duration_seconds: int = 1200,
     sts_endpoint_url: Optional[str] = None,
 ):
@@ -1093,7 +1093,12 @@ def assumed_role_session(
     """
 
     get_credentials = partial(
-        assumed_credentials, account_id, role, role_session_name=role_session_name, duration_seconds=duration_seconds, sts_endpoint_url=sts_endpoint_url
+        assumed_credentials,
+        account_id,
+        role,
+        role_session_name=role_session_name,
+        duration_seconds=duration_seconds,
+        sts_endpoint_url=sts_endpoint_url,
     )
 
     credentials = get_credentials()

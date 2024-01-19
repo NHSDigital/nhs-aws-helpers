@@ -9,7 +9,6 @@ import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from functools import partial, reduce, wraps
-from http.client import HTTPConnection, HTTPResponse
 from typing import (
     IO,
     Any,
@@ -37,7 +36,6 @@ import botocore.session
 from boto3.dynamodb.types import TypeDeserializer
 from boto3.s3.transfer import TransferConfig
 from boto3.session import Session
-from botocore import endpoint
 from botocore.config import Config
 from botocore.exceptions import ClientError, UnknownServiceError
 from botocore.response import StreamingBody
@@ -81,42 +79,6 @@ from nhs_aws_helpers.common import run_in_executor
 from nhs_aws_helpers.s3_object_writer import S3ObjectWriter
 
 s3re = re.compile(r"^(s3[an]?)://([^/]+)/(.+)$", re.IGNORECASE)
-
-
-class CustomHTTPResponse(HTTPResponse):
-    def __init__(self, sock, **kwargs):
-        """
-        Capture the local and remote ip address and ports if they may be of some use.
-        In exceptional scenarios, e.g. ReadTimeouts, the exception doesn't contain any response
-        information - it's an either/or - i.e. a response or an exception (see Endpoint._send_request()),
-        and there's nowhere to inject the socket information into the exception.
-        """
-        super().__init__(sock, **kwargs)
-
-        self.sock_name = sock.getsockname()
-        self.peer_name = sock.getpeername()
-
-
-def convert_to_response_dict_with_socket_info(http_response, operation_model):
-    # Call the real implementation...
-    response_dict = original_convert_to_response_dict(http_response, operation_model)
-
-    # Then add the custom socket info. Put in a try catch in case there's an edge case
-    # where there's no _original_response
-    with contextlib.suppress(Exception):
-        response_dict["socket"] = {
-            "sock_name": cast(CustomHTTPResponse, http_response.raw._original_response).sock_name,
-            "peer_name": cast(CustomHTTPResponse, http_response.raw._original_response).peer_name,
-        }
-
-    return response_dict
-
-
-HTTPConnection.response_class = CustomHTTPResponse  # type: ignore
-
-# Proxy the botocore function to allow us to add socket information to the response_dict
-original_convert_to_response_dict = endpoint.convert_to_response_dict
-endpoint.convert_to_response_dict = convert_to_response_dict_with_socket_info
 
 
 def s3_build_uri(bucket: str, key: str) -> str:

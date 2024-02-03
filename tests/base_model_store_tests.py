@@ -104,7 +104,7 @@ class NestedItem:
 
 @dataclass
 class MyDerivedModel(MyBaseModel):
-    id: str  # noqa: A003
+    id: str
     sk_field: Optional[str] = None
     optional_thing: Optional[str] = None
 
@@ -136,7 +136,7 @@ class MyDerivedModel(MyBaseModel):
 
 @dataclass
 class AnotherModel(MyBaseModel):
-    id: str  # noqa: A003
+    id: str
     sk_field: Optional[str] = None
     last_modified: datetime = field(default_factory=datetime.utcnow)
 
@@ -149,7 +149,7 @@ class AnotherModel(MyBaseModel):
 
 @dataclass
 class UnregisteredModel(MyBaseModel):
-    id: str  # noqa: A003
+    id: str
     sk_field: Optional[str] = None
     last_modified: datetime = field(default_factory=datetime.utcnow)
 
@@ -171,7 +171,7 @@ class NotSerializable:
 
 @dataclass
 class ASpecialDerivedModel(MyBaseModel):
-    id: str  # noqa: A003
+    id: str
     special_field: NotSerializable
     events: List[NestedItem] = field(default_factory=list)
     last_modified: datetime = field(default_factory=datetime.utcnow)

@@ -664,9 +664,11 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
         ordered = await self.batch_get_item_ordered(keys, max_concurrency=max_concurrency)
 
         models: List[Optional[TBaseModel]] = [
-            cast(TBaseModel, self.deserialise_model(record, self._model_types[record["model_type"]], **kwargs))
-            if record
-            else None
+            (
+                cast(TBaseModel, self.deserialise_model(record, self._model_types[record["model_type"]], **kwargs))
+                if record
+                else None
+            )
             for record in ordered
         ]
 

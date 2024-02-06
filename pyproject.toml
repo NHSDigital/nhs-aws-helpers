@@ -25,14 +25,14 @@ botocore-stubs = "^1.29.159"
 [tool.poetry.group.dev.dependencies]
 # ci / testing dependencies
 petname = "^2.6"
-black = "^23.9.1"
+black = "^24.1.1"
 mypy = "^1.4.0"
 coverage = "^7.2.7"
 pytest = "^7.3.1"
-pytest-asyncio = "^0.23.2"
+pytest-asyncio = "^0.23.4"
 tox = "^4.6.3"
 pytest-httpserver = "^1.0.8"
-ruff = "^0.1.0"
+ruff = "^0.2.0"
 
 
 [tool.poetry.group.local.dependencies]
@@ -56,7 +56,7 @@ include = '\.pyi?$'
 
 
 [tool.ruff]
-select = [
+lint.select = [
     # See https://beta.ruff.rs/docs/rules/ for a full list
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
@@ -80,14 +80,14 @@ select = [
     "SIM", # flake8-simplify
 ]
 src = ["."]
-ignore = [
+lint.ignore = [
     "PT004"
 ]
 exclude = [
     ".git",
     ".venv",
 ]
-unfixable = ["SIM112"]
+lint.unfixable = ["SIM112"]
 line-length = 120
 target-version = "py38"
 

@@ -2,3 +2,6 @@
 token: \$\{\{ secrets.GITHUB_TOKEN \}\}
 "token": response.get\("SessionToken"\)
 token=credentials\["token"\]
+
+.*(GITHUB|SONAR)_TOKEN: \$\{\{ secrets.(GITHUB|SONAR)_TOKEN \}\}
+.*asttokens = ">=2.1.0"

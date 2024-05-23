@@ -69,6 +69,7 @@ from mypy_boto3_s3.type_defs import (
     ObjectVersionTypeDef,
 )
 from mypy_boto3_secretsmanager.client import SecretsManagerClient
+from mypy_boto3_ses import SESClient
 from mypy_boto3_sns.client import SNSClient
 from mypy_boto3_sqs import SQSServiceResource
 from mypy_boto3_sqs.client import SQSClient
@@ -281,6 +282,10 @@ def dynamodb_client(session: Optional[Session] = None, config: Optional[Config] 
 
 def ddb_table(table_name: str, session: Optional[Session] = None, config: Optional[Config] = None) -> Table:
     return dynamodb(session=session, config=config).Table(table_name)
+
+
+def ses_client(session: Optional[Session] = None, config: Optional[Config] = None) -> SESClient:
+    return _aws("ses", "client", session, config)  # type: ignore[no-any-return]
 
 
 def sqs_client(session: Optional[Session] = None, config: Optional[Config] = None) -> SQSClient:

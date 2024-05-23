@@ -31,7 +31,7 @@ from mypy_boto3_dynamodb.type_defs import (
     QueryOutputTableTypeDef,
     TransactGetItemTypeDef,
     UpdateItemOutputTableTypeDef,
-    WriteRequestTypeDef,
+    WriteRequestOutputTypeDef,
 )
 
 from nhs_aws_helpers import dynamodb, dynamodb_retry_backoff
@@ -684,7 +684,7 @@ class _AsyncBatchWriter:
         self._store = store
         self._table_name = store.table.table_name
         self._client = store.client
-        self._items_buffer: List[WriteRequestTypeDef] = []
+        self._items_buffer: List[WriteRequestOutputTypeDef] = []
         self._flush_amount = flush_amount
         self._overwrite_by_keys = store.table_key_fields
 

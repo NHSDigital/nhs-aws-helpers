@@ -25,7 +25,7 @@ botocore-stubs = "^1.29.159"
 [tool.poetry.group.dev.dependencies]
 # ci / testing dependencies
 petname = "^2.6"
-black = "^24.1.1"
+black = "^24"
 mypy = "^1.4.0"
 coverage = "^7.2.7"
 pytest = "^7.3.1"

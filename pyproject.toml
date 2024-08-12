@@ -30,7 +30,7 @@ mypy = "^1.4.0"
 coverage = "^7.2.7"
 pytest = "^7.3.1"
 pytest-asyncio = "^0.23.8"
-tox = "^4.6.3"
+tox = "^4.16.0"
 pytest-httpserver = "^1.0.8"
 ruff = "^0"
 

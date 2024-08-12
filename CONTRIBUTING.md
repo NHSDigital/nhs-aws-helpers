@@ -74,5 +74,3 @@ lint checks will fail if the code is not formaated correctly
 # make black will run both isort and black
 make black
 ```
-
-

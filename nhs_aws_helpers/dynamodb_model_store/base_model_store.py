@@ -413,7 +413,7 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
         item = await self.get_item(
             key, ConsistentRead=consistent_read, ProjectionExpression=self._partition_key, **kwargs
         )
-        return item and self._partition_key in item
+        return not (not item or self._partition_key not in item)
 
     @dynamodb_retry_backoff()
     async def delete_item(self, key: TModelKey, **kwargs):

@@ -140,7 +140,7 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
 
         if value and value_type in (bytes, bytearray) and hasattr(value, "value"):
             value = value.value
-            if isinstance(value_type, bytearray):
+            if value_type is bytearray:
                 value = bytearray(value)
 
         if value_type in (str, bool, bytes, bytearray):
@@ -160,18 +160,18 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
 
         origin_type = get_origin(value_type)
 
-        if isinstance(origin_type, list):
+        if origin_type is list:
             item_type = get_args(value_type)[0]
             return [cls.deserialise_value(item_type, val, **kwargs) for val in value]
 
-        if isinstance(origin_type, dict):
+        if origin_type is dict:
             val_type = get_args(value_type)[1]
             return {key: cls.deserialise_value(val_type, val, **kwargs) for key, val in value.items()}
 
-        if isinstance(origin_type, frozenset):
+        if origin_type is frozenset:
             return frozenset(val for val in value)
 
-        if isinstance(origin_type, set):
+        if origin_type is set:
             return set(value)
 
         return value

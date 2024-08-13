@@ -837,10 +837,7 @@ class DDBRetryBackoff:
         if reasons:
             return True
 
-        if err.response["Error"]["Code"] in _RETRY_EXCEPTIONS:
-            return True
-
-        return False
+        return err.response["Error"]["Code"] in _RETRY_EXCEPTIONS
 
     def _sleep_for(self, retries: int):
         backoff = pow(2, retries) * self._backoff

@@ -140,7 +140,7 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
 
         if value and value_type in (bytes, bytearray) and hasattr(value, "value"):
             value = value.value
-            if value_type == bytearray:
+            if value_type is bytearray:
                 value = bytearray(value)
 
         if value_type in (str, bool, bytes, bytearray):
@@ -160,18 +160,18 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
 
         origin_type = get_origin(value_type)
 
-        if origin_type == list:
+        if origin_type is list:
             item_type = get_args(value_type)[0]
             return [cls.deserialise_value(item_type, val, **kwargs) for val in value]
 
-        if origin_type == dict:
+        if origin_type is dict:
             val_type = get_args(value_type)[1]
             return {key: cls.deserialise_value(val_type, val, **kwargs) for key, val in value.items()}
 
-        if origin_type == frozenset:
+        if origin_type is frozenset:
             return frozenset(val for val in value)
 
-        if origin_type == set:
+        if origin_type is set:
             return set(value)
 
         return value
@@ -413,10 +413,7 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
         item = await self.get_item(
             key, ConsistentRead=consistent_read, ProjectionExpression=self._partition_key, **kwargs
         )
-        if not item or self._partition_key not in item:
-            return False
-
-        return True
+        return not (not item or self._partition_key not in item)
 
     @dynamodb_retry_backoff()
     async def delete_item(self, key: TModelKey, **kwargs):

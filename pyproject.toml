@@ -15,7 +15,7 @@ repository = "https://github.com/NHSDigital/nhs-aws-helpers"
 # core dependencies
 python = ">=3.8,<4.0"
 boto3 = "^1.26.159"
-boto3-stubs = {extras = ["s3", "ssm", "secretsmanager", "dynamodb", "stepfunctions", "sqs", "lambda", "logs", "ses", "sns", "events", "kms", "firehose", "athena"], version = ">=1.28.0,^1.28.36"}
+boto3-stubs = {extras = ["s3", "ssm", "secretsmanager", "dynamodb", "stepfunctions", "sqs", "lambda", "logs", "ses", "sns", "events", "kms", "firehose", "athena"], version = "^1.34.151"}
 botocore-stubs = "^1.29.159"
 
 
@@ -27,10 +27,10 @@ botocore-stubs = "^1.29.159"
 petname = "^2.6"
 black = "^24"
 mypy = "^1.4.0"
-coverage = "^7.2.7"
+coverage = "^7.6.0"
 pytest = "^7.3.1"
-pytest-asyncio = "^0.23.4"
-tox = "^4.6.3"
+pytest-asyncio = "^0.23.8"
+tox = "^4.16.0"
 pytest-httpserver = "^1.0.8"
 ruff = "^0"
 

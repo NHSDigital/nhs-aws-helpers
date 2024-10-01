@@ -265,7 +265,7 @@ async def test_read_lines() -> None:
 
 if sys.version_info < (3, 10):
 
-    async def anext(gen, default: Any = None):  # noqa: A001
+    async def anext(gen, default: Any = None):
         async for el in gen:
             return el
         return default

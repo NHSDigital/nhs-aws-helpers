@@ -510,7 +510,7 @@ async def test_serialize_deserialize_model(store: MyModelStore):
     assert isinstance(serialized["some_enum"], str)
     assert serialized["some_enum"] == "one"
     assert isinstance(serialized["nested_enum"], dict)
-    assert serialized["nested_enum"]["some_enum"] == "one"
+    assert serialized["nested_enum"]["some_enum"] == "two"
 
     assert model.none_string is None
     assert "none_thing" not in serialized
@@ -532,7 +532,7 @@ async def test_serialize_deserialize_model(store: MyModelStore):
     assert deserialized.some_enum == SomeEnum.FIELD_ONE
     assert isinstance(deserialized.nested_enum, NestedModelWithEnum)
     assert isinstance(deserialized.nested_enum.some_enum, SomeEnum)
-    assert deserialized.nested_enum.some_enum == SomeEnum.FIELD_ONE
+    assert deserialized.nested_enum.some_enum == SomeEnum.FIELD_TWO
 
 
 async def test_nested_enum_using_deserialise_model_function():

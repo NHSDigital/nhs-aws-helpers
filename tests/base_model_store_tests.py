@@ -109,6 +109,12 @@ class SomeEnum(str, Enum):
 
 
 @dataclass
+class NestedModelWithEnum:
+    some_enum: SomeEnum
+    some_str: str
+
+
+@dataclass
 class MyDerivedModel(MyBaseModel):
     id: str
     sk_field: Optional[str] = None
@@ -127,7 +133,12 @@ class MyDerivedModel(MyBaseModel):
     union_date: Union[datetime, None] = field(default_factory=datetime.utcnow)
     bytes_type: Union[bytes, None] = None
     bytearray_type: Union[bytearray, None] = None
-    some_enum: SomeEnum = field(default_factory=lambda: SomeEnum.FIELD_ONE)
+    some_enum: SomeEnum = SomeEnum.FIELD_ONE
+    nested_enum: NestedModelWithEnum = field(
+        default_factory=lambda: NestedModelWithEnum(
+            some_str="string", some_enum=SomeEnum.FIELD_ONE
+        )
+    )
 
     def get_key(self) -> _MyModelKey:
         return _MyModelKey(my_pk=f"AA#{self.id}", my_sk=self.sk_field or "#")
@@ -498,6 +509,8 @@ async def test_serialize_deserialize_model(store: MyModelStore):
 
     assert isinstance(serialized["some_enum"], str)
     assert serialized["some_enum"] == "one"
+    assert isinstance(serialized["nested_enum"], dict)
+    assert serialized["nested_enum"]["some_enum"] == "one"
 
     assert model.none_string is None
     assert "none_thing" not in serialized
@@ -517,6 +530,23 @@ async def test_serialize_deserialize_model(store: MyModelStore):
     assert deserialized.today == model.today
     assert isinstance(deserialized.some_enum, SomeEnum)
     assert deserialized.some_enum == SomeEnum.FIELD_ONE
+    assert isinstance(deserialized.nested_enum, NestedModelWithEnum)
+    assert isinstance(deserialized.nested_enum.some_enum, SomeEnum)
+    assert deserialized.nested_enum.some_enum == SomeEnum.FIELD_ONE
+
+
+async def test_nested_enum_using_deserialise_model_function():
+    enum_test_dict = {
+        "some_str": "test string",
+        "some_enum": "two",
+    }
+
+    deserialised_model = BaseModelStore.deserialise_model(enum_test_dict, NestedModelWithEnum)
+
+    assert isinstance(deserialised_model, NestedModelWithEnum)
+    assert isinstance(deserialised_model.some_enum, SomeEnum)
+    assert deserialised_model.some_enum == SomeEnum.FIELD_TWO
+    assert deserialised_model.some_str == "test string"
 
 
 async def test_transact_get_put_model(store: MyModelStore):

@@ -3,6 +3,7 @@ import random
 import sys
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from enum import Enum
 from typing import Any, Dict, Generator, List, Mapping, Optional, Type, TypedDict, Union, cast
 from uuid import uuid4
 
@@ -102,6 +103,17 @@ class NestedItem:
     timestamp: datetime = field(default_factory=datetime.utcnow)
 
 
+class SomeEnum(str, Enum):
+    FIELD_ONE = "one"
+    FIELD_TWO = "two"
+
+
+@dataclass
+class NestedModelWithEnum:
+    some_enum: SomeEnum
+    some_str: str
+
+
 @dataclass
 class MyDerivedModel(MyBaseModel):
     id: str
@@ -121,6 +133,10 @@ class MyDerivedModel(MyBaseModel):
     union_date: Union[datetime, None] = field(default_factory=datetime.utcnow)
     bytes_type: Union[bytes, None] = None
     bytearray_type: Union[bytearray, None] = None
+    some_enum: SomeEnum = SomeEnum.FIELD_ONE
+    nested_enum: NestedModelWithEnum = field(
+        default_factory=lambda: NestedModelWithEnum(some_str="string", some_enum=SomeEnum.FIELD_TWO)
+    )
 
     def get_key(self) -> _MyModelKey:
         return _MyModelKey(my_pk=f"AA#{self.id}", my_sk=self.sk_field or "#")
@@ -489,6 +505,11 @@ async def test_serialize_deserialize_model(store: MyModelStore):
     assert isinstance(serialized["nested_item"], dict)
     assert serialized["nested_item"]["event"] == "created"
 
+    assert isinstance(serialized["some_enum"], str)
+    assert serialized["some_enum"] == "one"
+    assert isinstance(serialized["nested_enum"], dict)
+    assert serialized["nested_enum"]["some_enum"] == "two"
+
     assert model.none_string is None
     assert "none_thing" not in serialized
     assert model.none_list is None
@@ -505,6 +526,25 @@ async def test_serialize_deserialize_model(store: MyModelStore):
     assert deserialized.nested_item.event == "created"
     assert deserialized.last_modified == model.last_modified
     assert deserialized.today == model.today
+    assert isinstance(deserialized.some_enum, SomeEnum)
+    assert deserialized.some_enum == SomeEnum.FIELD_ONE
+    assert isinstance(deserialized.nested_enum, NestedModelWithEnum)
+    assert isinstance(deserialized.nested_enum.some_enum, SomeEnum)
+    assert deserialized.nested_enum.some_enum == SomeEnum.FIELD_TWO
+
+
+async def test_nested_enum_using_deserialise_model_function():
+    enum_test_dict = {
+        "some_str": "test string",
+        "some_enum": "two",
+    }
+
+    deserialised_model = BaseModelStore.deserialise_model(enum_test_dict, NestedModelWithEnum)  # type: ignore[type-var]
+
+    assert isinstance(deserialised_model, NestedModelWithEnum)
+    assert isinstance(deserialised_model.some_enum, SomeEnum)
+    assert deserialised_model.some_enum == SomeEnum.FIELD_TWO
+    assert deserialised_model.some_str == "test string"
 
 
 async def test_transact_get_put_model(store: MyModelStore):

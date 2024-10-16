@@ -3,6 +3,7 @@ import dataclasses
 import itertools
 from dataclasses import dataclass, fields, is_dataclass
 from datetime import date, datetime
+from enum import Enum
 from time import time
 from typing import (
     Any,
@@ -173,6 +174,9 @@ class BaseModelStore(Generic[TBaseModel, TModelKey]):
 
         if origin_type is set:
             return set(value)
+
+        if issubclass(value_type, Enum):
+            return value_type(value)
 
         return value
 

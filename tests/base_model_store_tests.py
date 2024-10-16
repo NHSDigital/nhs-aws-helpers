@@ -136,7 +136,7 @@ class MyDerivedModel(MyBaseModel):
     some_enum: SomeEnum = SomeEnum.FIELD_ONE
     nested_enum: NestedModelWithEnum = field(
         default_factory=lambda: NestedModelWithEnum(
-            some_str="string", some_enum=SomeEnum.FIELD_ONE
+            some_str="string", some_enum=SomeEnum.FIELD_TWO
         )
     )
 

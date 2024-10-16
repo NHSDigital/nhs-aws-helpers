@@ -3,6 +3,7 @@ import random
 import sys
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from enum import Enum
 from typing import Any, Dict, Generator, List, Mapping, Optional, Type, TypedDict, Union, cast
 from uuid import uuid4
 
@@ -102,6 +103,11 @@ class NestedItem:
     timestamp: datetime = field(default_factory=datetime.utcnow)
 
 
+class SomeEnum(str, Enum):
+    FIELD_ONE = "one"
+    FIELD_TWO = "two"
+
+
 @dataclass
 class MyDerivedModel(MyBaseModel):
     id: str
@@ -121,6 +127,7 @@ class MyDerivedModel(MyBaseModel):
     union_date: Union[datetime, None] = field(default_factory=datetime.utcnow)
     bytes_type: Union[bytes, None] = None
     bytearray_type: Union[bytearray, None] = None
+    some_enum: SomeEnum = field(default_factory=lambda: SomeEnum.FIELD_ONE)
 
     def get_key(self) -> _MyModelKey:
         return _MyModelKey(my_pk=f"AA#{self.id}", my_sk=self.sk_field or "#")
@@ -489,6 +496,9 @@ async def test_serialize_deserialize_model(store: MyModelStore):
     assert isinstance(serialized["nested_item"], dict)
     assert serialized["nested_item"]["event"] == "created"
 
+    assert isinstance(serialized["some_enum"], str)
+    assert serialized["some_enum"] == "one"
+
     assert model.none_string is None
     assert "none_thing" not in serialized
     assert model.none_list is None
@@ -505,6 +515,8 @@ async def test_serialize_deserialize_model(store: MyModelStore):
     assert deserialized.nested_item.event == "created"
     assert deserialized.last_modified == model.last_modified
     assert deserialized.today == model.today
+    assert isinstance(deserialized.some_enum, SomeEnum)
+    assert deserialized.some_enum == SomeEnum.FIELD_ONE
 
 
 async def test_transact_get_put_model(store: MyModelStore):

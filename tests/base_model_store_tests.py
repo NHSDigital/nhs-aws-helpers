@@ -135,9 +135,7 @@ class MyDerivedModel(MyBaseModel):
     bytearray_type: Union[bytearray, None] = None
     some_enum: SomeEnum = SomeEnum.FIELD_ONE
     nested_enum: NestedModelWithEnum = field(
-        default_factory=lambda: NestedModelWithEnum(
-            some_str="string", some_enum=SomeEnum.FIELD_TWO
-        )
+        default_factory=lambda: NestedModelWithEnum(some_str="string", some_enum=SomeEnum.FIELD_TWO)
     )
 
     def get_key(self) -> _MyModelKey:
@@ -541,7 +539,7 @@ async def test_nested_enum_using_deserialise_model_function():
         "some_enum": "two",
     }
 
-    deserialised_model = BaseModelStore.deserialise_model(enum_test_dict, NestedModelWithEnum)
+    deserialised_model = BaseModelStore.deserialise_model(enum_test_dict, NestedModelWithEnum)  # type: ignore[type-var]
 
     assert isinstance(deserialised_model, NestedModelWithEnum)
     assert isinstance(deserialised_model.some_enum, SomeEnum)
